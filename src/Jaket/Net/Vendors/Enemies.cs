@@ -32,6 +32,7 @@ public class Enemies : Vendor
         for (EntityType i = EntityType.Swordsmachine;   i <= EntityType.Swordsmachine;   i++) Vendor.Suppliers[(byte)i] = (id, type) => new Swordsmachine  (id, type);
         for (EntityType i = EntityType.SecuritySystem;  i <= EntityType.Brain;           i++) Vendor.Suppliers[(byte)i] = (id, type) => new Earthmover     (id, type);
         for (EntityType i = EntityType.Malicious;       i <= EntityType.Malicious;       i++) Vendor.Suppliers[(byte)i] = (id, type) => new Malicious      (id, type);
+        for (EntityType i = EntityType.Cerberus;        i <= EntityType.Cerberus;        i++) Vendor.Suppliers[(byte)i] = (id, type) => new Cerberus       (id, type);
 
         Events.OnLoad += () =>
         {

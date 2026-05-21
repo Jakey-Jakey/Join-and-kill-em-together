@@ -7,7 +7,7 @@ using Jaket.Content;
 using Jaket.Harmony;
 using Jaket.IO;
 
-/// <summary> Tangible entity of any husk type. </summary>
+/// <summary> Tangible entity of the swordsmachine type. </summary>
 public class Swordsmachine : Enemy
 {
     Agent agent;
@@ -188,7 +188,7 @@ public class Swordsmachine : Enemy
         if (__instance.TryGetEntity(out Swordsmachine s) && !s.Enraged) s.Enrage(true);
     }
 
-    [DynamicPatch(typeof(SwordsMachine), nameof(MaliciousFace.UnEnrage))]
+    [DynamicPatch(typeof(SwordsMachine), nameof(SwordsMachine.UnEnrage))]
     [Prefix]
     static void Unrage(SwordsMachine __instance)
     {

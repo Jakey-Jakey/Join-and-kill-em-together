@@ -14,31 +14,30 @@ public static class LobbyController
     public static bool Online => Lobby != null;
     public static bool Offline => Lobby == null;
 
-    /// <summary> Identifier of the last lobby owner. </summary>
-    public static uint LastOwner;
+    /// <summary> Identifier of the lobby owner. </summary>
+    public static uint Owner;
     /// <summary> Whether the player owns the lobby. </summary>
     public static bool IsOwner;
 
-    /// <summary> Whether a lobby is being created at the moment. </summary>
-    public static bool Creating;
-    /// <summary> Whether lobbies are being fetched at the moment. </summary>
-    public static bool Fetching;
+    /// <summary> Whether a lobby is being produced. </summary>
+    public static bool Creating { get; private set; }
+    /// <summary> Whether lobbies are being fetched. </summary>
+    public static bool Fetching { get; private set; }
 
     /// <summary> Subscribes to several events for proper work. </summary>
     public static void Load()
     {
-        // log general information about the lobby
-        Events.OnLobbyAction += () => Log.Debug($"[LOBY] Lobby name is {LobbyConfig.Name ?? "null"}, mode is {LobbyConfig.Mode ?? "null"}, level is {LobbyConfig.Level ?? "null"}");
-        // and leave it if local player is banned
         Events.OnLobbyAction += () =>
         {
+            Log.Debug($"[LOBY] Lobby name is {LobbyConfig.Name ?? "null"}, mode is {LobbyConfig.Mode ?? "null"}, level is {LobbyConfig.Level ?? "null"}");
+
             if (Online && !IsOwner && LobbyConfig.Banned.Has(AccId.ToString()))
             {
                 // notify the player to avoid confusion
                 Bundle.Hud2NS("lobby.banned");
 
                 LeaveLobby();
-                Log.Info("[LOBY] Left the lobby as you are banned there");
+                Log.Info("[LOBY] Left the lobby due to being banned");
             }
 
             if (Online && !IsOwner && Version.HasIncompatibility && !LobbyConfig.ModsAllowed)
@@ -47,25 +46,20 @@ public static class LobbyController
                 Bundle.Hud2NS("lobby.modded");
 
                 LeaveLobby();
-                Log.Info("[LOBY] Left the lobby as you have incompatible mods");
+                Log.Info("[LOBY] Left the lobby due to incompatible mods");
             }
         };
 
-        // get the owner after entering a lobby
-        Events.OnLobbyEnter += () => Log.Info($"[LOBY] Entered a lobby owned by {LastOwner = Lobby?.Owner.AccId ?? 0u}");
-        // and leave it if the owner has left
         Events.OnMemberLeave += m =>
         {
-            if (LastOwner == m.AccId)
+            if (Owner == m.AccId)
             {
                 LeaveLobby();
-                Log.Info("[LOBY] Left the lobby as the owner did the same");
+                Log.Info("[LOBY] Left the lobby due to owner leaving");
             }
         };
 
-        // put the name of the loaded level into the config to display in the lobby browser
         Events.OnLoad += () => LobbyConfig.Level = Scene;
-        // loading the main menu is equivalent to leaving the lobby
         Events.OnMainMenuLoad += () => LeaveLobby(false);
     }
 
@@ -81,7 +75,7 @@ public static class LobbyController
 
     #region control
 
-    /// <summary> Creates a new lobby and connects to it. </summary>
+    /// <summary> Creates a new lobby and joins it. </summary>
     public static void CreateLobby()
     {
         if (Creating || Online) return;
@@ -92,35 +86,38 @@ public static class LobbyController
         {
             Creating = false;
             Lobby = t.Result;
+            Owner = AccId;
+            IsOwner = true;
 
-            Lobby?.SetJoinable(IsOwner = true);
+            Lobby?.SetJoinable(true);
             Lobby?.SetPrivate();
             LobbyConfig.Reset();
 
+            Events.OnLobbyEnter.Fire();
             Log.Info("[LOBY] Successfully created a lobby");
         });
     }
 
-    /// <summary> Leaves the lobby. If the player is the owner, then all other players will be thrown to the main menu. </summary>
-    public static void LeaveLobby(bool loadMainMenu = true)
+    /// <summary> Leaves the lobby and, if necessary, loads the main menu. </summary>
+    public static void LeaveLobby(bool load = true)
     {
-        if (Offline) return;
+        if (Creating || Offline) return;
         Log.Info("[LOBY] Leaving the lobby...");
 
         Lobby?.Leave();
         Lobby = null;
 
         Networking.Close();
-        Events.OnLobbyAction.Fire();
+        if (load) LoadScn("Main Menu");
 
-        // load the main menu if the player is a client
-        if (!IsOwner && loadMainMenu) LoadScn("Main Menu");
+        Events.OnLobbyAction.Fire();
+        Log.Info("[LOBY] Successfully left the lobby");
     }
 
-    /// <summary> Opens the overlay with an invitation dialog. </summary>
+    /// <summary> Opens an invitation dialog. </summary>
     public static void InviteFriend() => SteamFriends.OpenGameInviteOverlay(Lobby.Value.Id);
 
-    /// <summary> Connects the player to the given lobby. </summary>
+    /// <summary> Connects to the given lobby. </summary>
     public static void JoinLobby(Lobby lobby)
     {
         if (Lobby?.Id == lobby.Id) return;
@@ -133,8 +130,12 @@ public static class LobbyController
         {
             if (t.Result == RoomEnter.Success)
             {
-                IsOwner = false;
                 Lobby = lobby;
+                Owner = lobby.Owner.AccId;
+                IsOwner = false;
+
+                Events.OnLobbyEnter.Fire();
+                Log.Info($"[LOBY] Successfully joined the lobby");
             }
             else Log.Warning($"[LOBY] Couldn't join the lobby, the result is {t.Result}");
         });

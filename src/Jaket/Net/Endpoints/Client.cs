@@ -98,8 +98,6 @@ public class Client : Endpoint, IConnectionManager
 
     public override void Update()
     {
-        if (Manager == null) return;
-
         Stats.MeasureTime(ref Stats.ReadMs, () => Manager.Receive());
         Stats.MeasureTime(ref Stats.WriteMs, () =>
         {
@@ -138,7 +136,7 @@ public class Client : Endpoint, IConnectionManager
 
     public void OnDisconnected(ConnectionInfo info) => Log.Info("[CLIENT] Disconnected");
 
-    public void OnMessage(Ptr data, int size, long msg, long time, int channel) => Handle(Manager.Connection, LobbyController.LastOwner, data, size);
+    public void OnMessage(Ptr data, int size, long msg, long time, int channel) => Handle(Manager.Connection, 0u, data, size);
 
     #endregion
 }

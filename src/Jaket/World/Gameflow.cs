@@ -42,6 +42,7 @@ public class Gameflow
     /// <summary> Subscribes to several events for proper work. </summary>
     public static void Load()
     {
+        Events.OnLobbyEnter += () => Mode = Gamemode.None;
         Events.OnLobbyAction += () =>
         {
             if (LobbyConfig.Mode != Mode.ToString().ToLower())

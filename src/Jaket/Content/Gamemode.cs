@@ -12,6 +12,7 @@ public enum Gamemode : byte
     HideAndSeek,
     BossRush,
     Hardcore,
+    None = 0xFF
 }
 
 /// <summary> Set of different tools for working with gamemodes. </summary>

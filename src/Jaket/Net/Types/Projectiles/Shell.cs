@@ -87,6 +87,9 @@ public class Shell : Projectile
     static void Parry(global::Projectile proj) => Kill<Shell>(proj, e =>
     {
         e.TakeOwnage();
+
+        // prevent speed from skyrocketing
+        if (proj.parried) proj.speed /= 2f;
     });
 
     [DynamicPatch(typeof(ProjectileSpread), nameof(ProjectileSpread.Start))]

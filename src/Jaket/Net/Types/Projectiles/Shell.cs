@@ -76,6 +76,7 @@ public class Shell : Projectile
     }, true);
 
     [DynamicPatch(typeof(global::Projectile), nameof(global::Projectile.CreateExplosionEffect))]
+    [DynamicPatch(typeof(global::Projectile), nameof(global::Projectile.Explode))]
     [Prefix]
     static bool Death(global::Projectile __instance) => Kill<Shell>(__instance, e =>
     {

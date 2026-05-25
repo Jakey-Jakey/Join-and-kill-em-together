@@ -231,6 +231,7 @@ public static class GameAssets
         "Attacks and Projectiles/Cannonball.prefab",
         "Attacks and Projectiles/Projectile.prefab",
         "Attacks and Projectiles/Projectile Beamable.prefab",
+        "Attacks and Projectiles/Projectile Explosive.prefab",
     };
 
     /// <summary> List of internal paths of all explosions. </summary>

@@ -28,7 +28,7 @@ public class Projectiles : Vendor
         for (EntityType i = EntityType.Screwdriver;    i <= EntityType.Screwdriver;    i++) Vendor.Suppliers[(byte)i] = (id, type) => new Screwdriver(id, type);
         for (EntityType i = EntityType.Rocket;         i <= EntityType.Rocket;         i++) Vendor.Suppliers[(byte)i] = (id, type) => new Rocket     (id, type);
         for (EntityType i = EntityType.Cannonball;     i <= EntityType.Cannonball;     i++) Vendor.Suppliers[(byte)i] = (id, type) => new Cannon     (id, type);
-        for (EntityType i = EntityType.ProjectileHell; i <= EntityType.ProjectileBeam; i++) Vendor.Suppliers[(byte)i] = (id, type) => new Shell      (id, type);
+        for (EntityType i = EntityType.ProjectileHell; i <= EntityType.ProjectileExpl; i++) Vendor.Suppliers[(byte)i] = (id, type) => new Shell      (id, type);
 
         Events.OnTeamChange += () => Networking.Entities.Alive<Projectile>(p => p.UpdateIgnore());
     }
@@ -36,7 +36,7 @@ public class Projectiles : Vendor
     public EntityType Type(GameObject obj) => Vendor.Find
     (
         EntityType.Shell,
-        EntityType.ProjectileBeam,
+        EntityType.ProjectileExpl,
         p => p.name.Length == obj?.name.Length - 7 && (obj?.name.Contains(p.name) ?? false)
     );
 

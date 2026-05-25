@@ -160,6 +160,8 @@ public abstract class Enemy : OwnableEntity
         else
             enemyId.InstaKill();
 
+        enemyId.dontCountAsKills = true;
+
         Dest(agent);
     }
 

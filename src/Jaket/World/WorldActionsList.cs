@@ -17,21 +17,6 @@ OPENING ALL DOORS... <color=#32CD32>DONE</color>";
     // NEVER DO DESTROY IMMEDIATE IN STATIC ACTION
     public static void Load()
     {
-        #region 0-3
-        l = "Level 0-3";
-
-        NetAction.Sync(l, "Cube (1)", new(-89.5f, 9.3f, 413f)); // boss
-
-        #endregion
-        #region 0-5
-        l = "Level 0-5";
-
-        StaticAction.Find(l, "Cube", new(182f, 4f, 382f), obj => obj.GetComponent<ObjectActivator>().events.toDisActivateObjects[0] = null); // corridor
-
-        NetAction.Sync(l, "Cube", new(182f, 4f, 382f)); // boss
-        NetAction.Sync(l, "DelayedDoorActivation", new(175f, -6f, 382f));
-
-        #endregion
         #region 0-S
         l = "Level 0-S";
 

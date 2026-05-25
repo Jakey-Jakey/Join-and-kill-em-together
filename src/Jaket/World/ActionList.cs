@@ -158,6 +158,21 @@ public static class ActionList
         #region 0-5
         l = "Level 0-5";
 
+        ActionType.Find(l, "4 Contents/Cube", t => t.Component<ObjectActivator>(o => o.events.toDisActivateObjects[0] = null, true));
+        ActionType.Find(l, "4 Contents/Enemies", t => t.Component<ActivateNextWaveHP>(o =>
+        {
+            if (LobbyController.IsOwner)
+                o.health = 74f;
+            else
+                Dest(o);
+        }, true));
+
+        ActionType.Act(l, "4 Contents/Cube"); // boss
+        ActionType.Act(l, "StatueFake (1)/StatueActivator"); // boss
+        ActionType.Act(l, "Hellgate/DelayedDoorActivation");
+
+        ActionType.Turn(l, "/5 - Final Hallway");
+
         #endregion
         #region 0-S
         l = "Level 0-S";

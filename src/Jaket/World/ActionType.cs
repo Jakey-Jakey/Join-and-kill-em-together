@@ -38,7 +38,7 @@ public static class ActionType
     }));
 
     /// <summary> Creates an action that turns an object on. </summary>
-    public static void Turn(string scene, string path) => Find(scene, path, t => t.gameObject.SetActive(true));
+    public static void Turn(string scene, string path) => Find(scene, path, t => Events.Post(() => t.gameObject.SetActive(true)));
 
     /// <summary> Creates an action that destroys an object. </summary>
     public static void Dest(string scene, string path) => Find(scene, path, t => Tools.Tools.Dest(t.gameObject));

@@ -79,7 +79,13 @@ public class Cerberus : Enemy
         agent.Get(out scr);
         agent.Get(out animator);
 
-        if (Scene == "Level 0-5") agent.Scale = Vector3.one * 1.2f;
+        if (Scene == "Level 0-5")
+        {
+            agent.Scale = Vector3.one * 1.2f;
+            agent.Get(out EnemyIdentifier i);
+
+            i.overrideFullName = "CERBERUS, GUARDIAN OF HELL";
+        }
     }
 
     public override void Update(float delta)

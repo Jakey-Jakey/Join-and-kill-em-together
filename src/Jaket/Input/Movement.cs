@@ -114,6 +114,7 @@ public class Movement : MonoSingleton<Movement>
         if (Input.GetKeyDown(KeyCode.F4)) UI.Debug.Toggle();
         if (Input.GetKeyDown(KeyCode.F5)) UI.Debug.Clear();
         if (Input.GetKeyDown(KeyCode.F6)) UI.Debug.Raycast();
+        if (Input.GetKeyDown(KeyCode.F7)) UI.Debug.Dump();
     }
 
     private void LateUpdate()

@@ -140,6 +140,8 @@ public class Debug : Fragment
         }
     }
 
+    public void Dump() => SceneDumper.Dump();
+
     /// <summary> Data warehouse that can be projected onto a graph. </summary>
     public class Data
     {

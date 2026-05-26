@@ -20,18 +20,8 @@ public static class UI
 
     /// <summary> Whether any dialog is visible. </summary>
     public static bool AnyDialog => (Dialogs?.Any(d => d.Shown) ?? false) || (OptionsManager.Instance?.paused ?? false);
-    /// <summary> Strongest player physics lock requested by visible dialogs. </summary>
-    public static Fragment.PhysicsLock PhysicsLock
-    {
-        get
-        {
-            if (OptionsManager.Instance?.paused ?? false) return Fragment.PhysicsLock.Full;
-
-            var lockPhysics = Fragment.PhysicsLock.None;
-            Dialogs?.Each(d => d.Shown && d.LockPhysics > lockPhysics, d => lockPhysics = d.LockPhysics);
-            return lockPhysics;
-        }
-    }
+    /// <summary> Whether a dialog that should fully freeze the player is visible. </summary>
+    public static bool AnyBlockingDialog => (OptionsManager.Instance?.paused ?? false) || (Dialogs?.Any(d => d.Shown && d != Chat) ?? false);
 
     #region dialogs
 

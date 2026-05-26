@@ -14,8 +14,6 @@ using Jaket.UI.Elements;
 using Jaket.UI.Fragments;
 using Jaket.World;
 
-using PhysicsLock = Jaket.UI.Lib.Fragment.PhysicsLock;
-
 /// <summary> Class responsible for additions to control and local display of emotes. </summary>
 public class Movement : MonoSingleton<Movement>
 {
@@ -137,16 +135,13 @@ public class Movement : MonoSingleton<Movement>
         if (!nm.dead)
         {
             var horizontal = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ;
-            var physicsLock = UI.PhysicsLock;
 
-            nm.rb.constraints = physicsLock switch
-            {
-                PhysicsLock.Full       => RigidbodyConstraints.FreezeAll,
-                PhysicsLock.Horizontal => chatStopped ? horizontal : RigidbodyConstraints.FreezeRotation,
-                _ => Emotes.Current == 0xFF || Emotes.Current == 0x0B
-                    ? RigidbodyConstraints.FreezeRotation
-                    : horizontal
-            };
+            if (UI.AnyBlockingDialog)
+                nm.rb.constraints = RigidbodyConstraints.FreezeAll;
+            else if (UI.Chat.Shown)
+                nm.rb.constraints = chatStopped ? horizontal : RigidbodyConstraints.FreezeRotation;
+            else
+                nm.rb.constraints = Emotes.Current == 0xFF || Emotes.Current == 0x0B ? RigidbodyConstraints.FreezeRotation : horizontal;
         }
     }
 
@@ -231,7 +226,7 @@ public class Movement : MonoSingleton<Movement>
     [Prefix]
     static void StopChatInput(NewMovement __instance)
     {
-        if (!__instance.dead && UI.PhysicsLock == PhysicsLock.Horizontal)
+        if (!__instance.dead && UI.Chat.Shown)
             __instance.DeactivateMovement();
     }
 
@@ -239,7 +234,7 @@ public class Movement : MonoSingleton<Movement>
     [Postfix]
     static void BrakeChatMovement(NewMovement __instance)
     {
-        if (__instance.dead || UI.PhysicsLock != PhysicsLock.Horizontal)
+        if (__instance.dead || !UI.Chat.Shown)
         {
             chatBraking = chatStopped = false;
             return;

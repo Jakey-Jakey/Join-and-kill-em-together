@@ -9,17 +9,8 @@ using static Pal;
 /// <summary> Interface fragment that contains multiple tables. </summary>
 public class Fragment
 {
-    public enum PhysicsLock
-    {
-        None,
-        Horizontal,
-        Full
-    }
-
     /// <summary> Whether the fragment is a dialog. </summary>
     public bool Dialog { get; private set; }
-    /// <summary> How showing this fragment affects player physics. </summary>
-    public PhysicsLock LockPhysics { get; private set; }
     /// <summary> Whether the fragment is visible. </summary>
     public bool Shown;
 
@@ -28,10 +19,9 @@ public class Fragment
     /// <summary> Vertical bar located on the left side of the fragment. </summary>
     public Bar Sidebar;
 
-    public Fragment(Transform root, string name, bool dialog, Prov<bool> cond = null, Runnable hide = null, PhysicsLock lockPhysics = PhysicsLock.Full)
+    public Fragment(Transform root, string name, bool dialog, Prov<bool> cond = null, Runnable hide = null)
     {
         Content = Builder.Canvas(Create(name, root).transform, Dialog = dialog).transform;
-        LockPhysics = lockPhysics;
 
         cond ??= () => true;
         hide ??= () => Content.gameObject.SetActive(Shown = false);

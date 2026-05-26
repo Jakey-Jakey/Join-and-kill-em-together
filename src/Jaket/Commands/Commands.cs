@@ -174,6 +174,18 @@ public static class Commands
                 chat.Receive($"[green]Scene dumped to [white]logs/dumps/{System.IO.Path.GetFileName(path)}[][green].");
         });
 
+        Handler.Register("dumpall", "Cycle every campaign level and dump each (single-player only, takes ~10 min)", args =>
+        {
+            if (LobbyController.Online)
+                chat.Receive("[red]Leave the lobby first — /dumpall cycles every campaign level.");
+            else if (SceneDumper.DumpAllRunning)
+                chat.Receive("[red]/dumpall is already running.");
+            else if (SceneDumper.DumpAll())
+                chat.Receive("[green]Dumping every campaign level — sit tight for ~10 minutes. Progress logs in BepInEx/plugins/.../logs/.");
+            else
+                chat.Receive("[red]Could not start /dumpall — see the log for details.");
+        });
+
         Handler.Register("authors", "Display the list of all developers", args => Print
         ([
             "Permanent Author",   "xzxADIxzx",

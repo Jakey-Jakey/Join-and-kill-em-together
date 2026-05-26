@@ -186,6 +186,11 @@ public static class ActionList
         ActionType.Window(l);
         ActionType.Switch(l);
 
+        ActionType.Act(l, "/6 Activator");            // loads 6 - Waterfall Arena
+        ActionType.Act(l, "6 Nonstuff/11 Activator"); // loads 11 - Blue Skull Room
+        ActionType.Act(l, "5 Nonstuff/Cube");         // unloads 6 and 11 after section 5
+        ActionType.Act(l, "Enemies/Trigger");         // unloads 12, 3, 2 on end-room entry
+
         ActionType.Dest(l, "11 Nonstuff/Altar"); // duplicate
 
         #endregion

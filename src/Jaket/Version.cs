@@ -24,6 +24,8 @@ public static class Version
 
     /// <summary> Readable version includes beta tag. </summary>
     public static string Readable => DEBUG ? $"{CURRENT}-beta" : CURRENT;
+    /// <summary> Network protocol version used for multiplayer compatibility. </summary>
+    public static string Protocol => Readable;
     /// <summary> Hash of the current build's commit. </summary>
     public static string Hash => Assembly.GetCallingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion[^40..^32];
 

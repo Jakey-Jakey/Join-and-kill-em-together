@@ -165,6 +165,15 @@ public static class Commands
                 chat.Receive("[red]Couldn't parse the given values.");
         });
 
+        Handler.Register("dump", "Dump the current scene hierarchy to logs/dumps/", args =>
+        {
+            var path = SceneDumper.Dump();
+            if (path == null)
+                chat.Receive("[red]Cannot dump — leave the main menu and wait for the scene to finish loading.");
+            else
+                chat.Receive($"[green]Scene dumped to [white]logs/dumps/{System.IO.Path.GetFileName(path)}[][green].");
+        });
+
         Handler.Register("authors", "Display the list of all developers", args => Print
         ([
             "Permanent Author",   "xzxADIxzx",

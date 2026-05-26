@@ -128,7 +128,7 @@ public class Movement : MonoSingleton<Movement>
             UI.Spectator.UpdateCamera(!nm.dead && Emotes.Ends);
         }
 
-        if (!nm.dead) nm.rb.constraints = UI.AnyDialog
+        if (!nm.dead) nm.rb.constraints = UI.AnyBlockingDialog
             ? RigidbodyConstraints.FreezeAll
             : Emotes.Current == 0xFF || Emotes.Current == 0x0B
                 ? RigidbodyConstraints.FreezeRotation

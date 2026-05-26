@@ -20,6 +20,8 @@ public static class UI
 
     /// <summary> Whether any dialog is visible. </summary>
     public static bool AnyDialog => (Dialogs?.Any(d => d.Shown) ?? false) || (OptionsManager.Instance?.paused ?? false);
+    /// <summary> Whether any player-freezing dialog is visible. </summary>
+    public static bool AnyBlockingDialog => (Dialogs?.Any(d => d.Shown && d.FreezesPlayer) ?? false) || (OptionsManager.Instance?.paused ?? false);
 
     #region dialogs
 

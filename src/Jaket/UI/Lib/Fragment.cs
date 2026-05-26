@@ -11,6 +11,8 @@ public class Fragment
 {
     /// <summary> Whether the fragment is a dialog. </summary>
     public bool Dialog { get; private set; }
+    /// <summary> Whether showing this fragment freezes player physics. </summary>
+    public bool FreezesPlayer { get; private set; }
     /// <summary> Whether the fragment is visible. </summary>
     public bool Shown;
 
@@ -19,9 +21,10 @@ public class Fragment
     /// <summary> Vertical bar located on the left side of the fragment. </summary>
     public Bar Sidebar;
 
-    public Fragment(Transform root, string name, bool dialog, Prov<bool> cond = null, Runnable hide = null)
+    public Fragment(Transform root, string name, bool dialog, Prov<bool> cond = null, Runnable hide = null, bool freezesPlayer = true)
     {
         Content = Builder.Canvas(Create(name, root).transform, Dialog = dialog).transform;
+        FreezesPlayer = freezesPlayer;
 
         cond ??= () => true;
         hide ??= () => Content.gameObject.SetActive(Shown = false);

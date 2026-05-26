@@ -90,7 +90,13 @@ public static class Commands
 
         Handler.Register("plushie", "<name>", "Spawn a plushie by name", args =>
         {
-            var name = args.Length == 0 ? null : args[0];
+            if (args.Length == 0)
+            {
+                chat.Receive("[red]Please provide a plushie name.");
+                return;
+            }
+
+            var name = args[0];
             int type = GameAssets.Plushies.IndexOf(n => n.Contains(name));
 
             if (type == -1)

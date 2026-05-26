@@ -24,6 +24,6 @@ public class Command
         if (args == "")
             Handler([]);
         else
-            Handler(args.Split(' '));
+            Handler(args.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries));
     }
 }

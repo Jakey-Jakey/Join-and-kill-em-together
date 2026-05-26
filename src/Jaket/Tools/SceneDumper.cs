@@ -15,7 +15,7 @@ using Jaket.IO;
 /// </summary>
 public static class SceneDumper
 {
-    /// <summary> Curated set of components whose presence on a GameObject merits a full field dump. </summary>
+    /// <summary> Curated set of components surfaced in the stubs appendix. </summary>
     public static readonly Type[] Syncable =
     {
         typeof(ObjectActivator),
@@ -33,10 +33,29 @@ public static class SceneDumper
         typeof(ItemPlaceZone),
     };
 
+    /// <summary>
+    /// Subset of Syncable that gets a node in the hierarchy tree. Position-keyed types
+    /// (Glass, Flammable, etc.) are excluded because a single ActionType helper covers
+    /// every instance and rendering them in-tree explodes the file (e.g. 2008 Flammables
+    /// on enemy bones in 0-1). They still appear in the stubs section.
+    /// </summary>
+    private static readonly HashSet<Type> TreeKeep = new()
+    {
+        typeof(ObjectActivator),
+        typeof(ScriptActivator),
+        typeof(ControllerPointer),
+        typeof(Door),
+        typeof(ItemTrigger),
+        typeof(ItemPlaceZone),
+        typeof(ActivateNextWaveHP),
+    };
+
     /// <summary> Max children rendered per parent in the tree before collapsing the tail. </summary>
     private const int CHILD_RENDER_CAP = 64;
     /// <summary> Defensive recursion limit. Real ULTRAKILL scenes don't approach this. </summary>
     private const int MAX_DEPTH = 32;
+    /// <summary> Max positions listed per position-keyed stub group before collapsing. </summary>
+    private const int POS_LIST_CAP = 8;
 
     /// <summary>
     /// Walks the active scene and writes a Markdown dump to Files.Logs/dumps/.
@@ -44,32 +63,37 @@ public static class SceneDumper
     /// </summary>
     public static string Dump()
     {
-        var active = SceneManager.GetActiveScene();
-        if (active.name == "Main Menu" || Pending != null)
+        string friendly = Jaket.Tools.Tools.Scene; // SceneHelper.CurrentScene — "Level 0-1" rather than asset hash
+        if (friendly == "Main Menu" || Pending != null)
         {
             Log.Warning("[DUMP] Refused: main menu or scene is still loading.");
             return null;
         }
 
-        var roots = active.GetRootGameObjects();
+        var roots = SceneManager.GetActiveScene().GetRootGameObjects();
 
-        var lines = new List<string>(8192);
-        var counts = new Dictionary<Type, int>();
         var stubs = new Dictionary<Type, List<StubEntry>>();
-        int inspected = 0;
-
+        var counts = new Dictionary<Type, int>();
         foreach (var t in Syncable) stubs[t] = new();
 
-        WriteHeader(lines, active.name, roots.Length);
+        // Pass 1: collect every syncable instance for the stubs appendix.
+        foreach (var root in roots) WalkForStubs(root.transform, 0, stubs, counts);
 
-        // Tree section is written after the walk so the stubs/index appendix can appear first.
+        // Pass 2: mark every subtree that contains a tree-worthy syncable.
+        var interesting = new HashSet<Transform>();
+        foreach (var root in roots) MarkInteresting(root.transform, 0, interesting);
+
+        // Pass 3: emit the tree.
+        var lines = new List<string>(8192);
+        int inspected = 0;
+        WriteHeader(lines, friendly);
         var tree = new List<string>(4096);
         foreach (var root in roots)
-            WalkNode(root.transform, 0, tree, counts, stubs, ref inspected);
+            WalkEmit(root.transform, 0, tree, interesting, ref inspected, /*parentSyncable=*/false);
 
         WriteStubAppendix(lines, stubs);
         lines.Add("");
-        lines.Add("## Hierarchy");
+        lines.Add("## Hierarchy (pruned to syncables + ancestors + direct neighbors)");
         lines.Add("");
         lines.Add("```");
         lines.AddRange(tree);
@@ -77,7 +101,6 @@ public static class SceneDumper
         lines.Add("");
         WriteComponentIndex(lines, counts);
 
-        // Patch in the totals line we couldn't know until the walk finished.
         int syncables = 0;
         foreach (var s in stubs.Values) syncables += s.Count;
         lines[2] = $"Roots: {roots.Length}   Inspected: {inspected}   Syncables: {syncables}";
@@ -86,7 +109,7 @@ public static class SceneDumper
         try { Files.MakeDir(dir); }
         catch (Exception ex) { Log.Error("[DUMP] Could not create dumps directory.", ex); return null; }
 
-        string path = Files.Join(dir, $"{SafeName(active.name)}_{Log.Time.Replace(':', '.')}.md");
+        string path = Files.Join(dir, $"{SafeName(friendly)}_{Log.Time.Replace(':', '.')}.md");
         Files.Append(path, lines);
         Log.Debug($"[DUMP] Wrote {path} ({lines.Count} lines, {syncables} syncables)");
         return path;
@@ -94,34 +117,85 @@ public static class SceneDumper
 
     #region walk
 
-    private static void WalkNode(Transform t, int depth, List<string> tree,
-                                 Dictionary<Type, int> counts,
-                                 Dictionary<Type, List<StubEntry>> stubs,
-                                 ref int inspected)
+    /// <summary> Pass 1: collects every syncable component in the scene for the stubs appendix. </summary>
+    private static void WalkForStubs(Transform t, int depth,
+                                     Dictionary<Type, List<StubEntry>> stubs,
+                                     Dictionary<Type, int> counts)
+    {
+        if (depth >= MAX_DEPTH) return;
+        if (!IsReal(t.gameObject)) return;
+
+        var comps = t.GetComponents(typeof(Component));
+        foreach (var c in comps)
+        {
+            if (c == null) continue;
+            var ct = c.GetType();
+            foreach (var k in Syncable)
+            {
+                if (k.IsAssignableFrom(ct))
+                {
+                    stubs[k].Add(new(c.Path(), c.transform.position));
+                    CountAdd(counts, k);
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < t.childCount; i++) WalkForStubs(t.GetChild(i), depth + 1, stubs, counts);
+    }
+
+    /// <summary> Pass 2: returns true if t or any descendant carries a TreeKeep component. </summary>
+    private static bool MarkInteresting(Transform t, int depth, HashSet<Transform> set)
+    {
+        if (depth >= MAX_DEPTH) return false;
+        if (!IsReal(t.gameObject)) return false;
+
+        bool here = HasTreeKeep(t);
+        bool descendant = false;
+        for (int i = 0; i < t.childCount; i++)
+            if (MarkInteresting(t.GetChild(i), depth + 1, set)) descendant = true;
+
+        if (here || descendant) set.Add(t);
+        return here || descendant;
+    }
+
+    private static bool HasTreeKeep(Transform t)
+    {
+        var comps = t.GetComponents(typeof(Component));
+        foreach (var c in comps)
+        {
+            if (c == null) continue;
+            var ct = c.GetType();
+            foreach (var k in TreeKeep) if (k.IsAssignableFrom(ct)) return true;
+        }
+        return false;
+    }
+
+    private static void WalkEmit(Transform t, int depth, List<string> tree,
+                                 HashSet<Transform> interesting,
+                                 ref int inspected,
+                                 bool parentSyncable)
     {
         if (depth >= MAX_DEPTH) { tree.Add(Indent(depth) + "... (max depth)"); return; }
         if (!IsReal(t.gameObject)) return;
+
+        bool thisInteresting = interesting.Contains(t);
+        // Keep this node if it's interesting OR if its parent was syncable (sister-context).
+        if (!thisInteresting && !parentSyncable) return;
 
         inspected++;
 
         var comps = t.GetComponents(typeof(Component));
         var tier1 = new List<Component>();
-        var tier2 = new List<string>();
-
+        bool thisSyncable = false;
         foreach (var c in comps)
         {
-            if (c == null) continue; // missing scripts come through as nulls
+            if (c == null) continue;
             var ct = c.GetType();
-
-            // Highlight if exactly this type — or a derived type — is in the curated list.
-            bool curated = false;
-            foreach (var k in Syncable)
+            foreach (var k in TreeKeep)
             {
-                if (k.IsAssignableFrom(ct)) { curated = true; CountAdd(counts, k); break; }
+                if (k.IsAssignableFrom(ct)) { tier1.Add(c); thisSyncable = true; break; }
             }
-
-            if (curated) tier1.Add(c);
-            else if (ct != typeof(Transform) && ct != typeof(RectTransform)) tier2.Add(ct.Name);
         }
 
         // GameObject line
@@ -129,7 +203,6 @@ public static class SceneDumper
         sb.Append(Indent(depth));
         sb.Append(t.name);
         sb.Append(t.gameObject.activeSelf ? "  [active]" : "  [inactive]");
-
         if (tier1.Count > 0)
         {
             sb.Append("  ");
@@ -139,45 +212,47 @@ public static class SceneDumper
                 sb.Append('*').Append(SimpleName(tier1[i].GetType()));
             }
         }
-        if (tier2.Count > 0)
-        {
-            sb.Append("   (");
-            for (int i = 0; i < tier2.Count; i++)
-            {
-                if (i > 0) sb.Append(", ");
-                sb.Append(tier2[i]);
-            }
-            sb.Append(')');
-        }
         tree.Add(sb.ToString());
 
-        // Tier-1 field dumps inline under the GameObject line
-        foreach (var c in tier1) WriteTierOneFields(tree, depth + 1, c, stubs);
+        foreach (var c in tier1) WriteTierOneFields(tree, depth + 1, c);
 
-        // Children with cap
+        // Recurse. Children are visited if they're interesting (will keep themselves)
+        // or if THIS node is syncable (so the maintainer can see immediate siblings/children
+        // referenced by toActivateObjects, like "Blockers/0").
         int childCount = t.childCount;
-        if (childCount > CHILD_RENDER_CAP)
+        int kept = 0, skipped = 0;
+        if (childCount > CHILD_RENDER_CAP && !thisSyncable)
         {
             int head = CHILD_RENDER_CAP / 2;
             int tail = CHILD_RENDER_CAP - head;
-            for (int i = 0; i < head; i++) WalkNode(t.GetChild(i), depth + 1, tree, counts, stubs, ref inspected);
+            for (int i = 0; i < head; i++)
+            {
+                int before = tree.Count;
+                WalkEmit(t.GetChild(i), depth + 1, tree, interesting, ref inspected, thisSyncable);
+                if (tree.Count > before) kept++; else skipped++;
+            }
             tree.Add(Indent(depth + 1) + $"... (+{childCount - head - tail} more children)");
-            for (int i = childCount - tail; i < childCount; i++) WalkNode(t.GetChild(i), depth + 1, tree, counts, stubs, ref inspected);
+            for (int i = childCount - tail; i < childCount; i++)
+                WalkEmit(t.GetChild(i), depth + 1, tree, interesting, ref inspected, thisSyncable);
         }
         else
         {
-            for (int i = 0; i < childCount; i++) WalkNode(t.GetChild(i), depth + 1, tree, counts, stubs, ref inspected);
+            for (int i = 0; i < childCount; i++)
+            {
+                int before = tree.Count;
+                WalkEmit(t.GetChild(i), depth + 1, tree, interesting, ref inspected, thisSyncable);
+                if (tree.Count > before) kept++; else skipped++;
+            }
+            if (skipped > 0 && thisSyncable) tree.Add(Indent(depth + 1) + $"... (+{skipped} uninteresting children)");
         }
     }
 
-    private static void WriteTierOneFields(List<string> tree, int depth, Component c,
-                                           Dictionary<Type, List<StubEntry>> stubs)
+    private static void WriteTierOneFields(List<string> tree, int depth, Component c)
     {
         string pad = Indent(depth) + "    ";
 
         if (c is ObjectActivator oa)
         {
-            stubs[typeof(ObjectActivator)].Add(new(c.Path(), c.transform.position));
             tree.Add(pad + $"delay: {oa.delay}");
             DumpEventArray(tree, pad, "toActivateObjects", oa.events?.toActivateObjects);
             DumpEventArray(tree, pad, "toDisActivateObjects", oa.events?.toDisActivateObjects);
@@ -185,52 +260,28 @@ public static class SceneDumper
             DumpUnityEvent(tree, pad, "onDisActivate", oa.events?.onDisActivate);
             return;
         }
-
         if (c is ScriptActivator sa)
         {
-            stubs[typeof(ScriptActivator)].Add(new(c.Path(), c.transform.position));
             tree.Add(pad + $"pistons: {sa.pistons?.Length ?? 0}, lightpillars: {sa.lightpillars?.Length ?? 0}");
             return;
         }
-
         if (c is ControllerPointer cp)
         {
-            stubs[typeof(ControllerPointer)].Add(new(c.Path(), c.transform.position));
             tree.Add(pad + $"OnPressed: {ListenerSummary(cp.OnPressed)}");
             return;
         }
-
-        if (c is Glass g)
-        {
-            stubs[typeof(Glass)].Add(new(c.Path(), c.transform.position));
-            tree.Add(pad + $"wall: {g.wall}  pos: {FormatXZ(g.transform.position)}");
-            return;
-        }
-
         if (c is ActivateNextWaveHP anw)
         {
-            stubs[typeof(ActivateNextWaveHP)].Add(new(c.Path(), c.transform.position));
             tree.Add(pad + $"health: {anw.health}");
             return;
         }
-
         if (c is ItemPlaceZone ipz)
         {
-            stubs[typeof(ItemPlaceZone)].Add(new(c.Path(), c.transform.position));
             tree.Add(pad + $"activateOnSuccess: {ipz.activateOnSuccess?.Length ?? 0}, deactivateOnSuccess: {ipz.deactivateOnSuccess?.Length ?? 0}");
             return;
         }
-
-        // Generic stub-only entry for the rest: StatueActivator, LimboSwitch, Flammable,
-        // ActivateArena, FinalDoor, Door, ItemTrigger. The maintainer mostly needs the
-        // path + position for these; deep field dumps aren't usually rewritten.
-        foreach (var k in Syncable)
-            if (k.IsAssignableFrom(c.GetType()))
-            {
-                stubs[k].Add(new(c.Path(), c.transform.position));
-                tree.Add(pad + $"pos: {FormatXZ(c.transform.position)}");
-                return;
-            }
+        // Door, ItemTrigger — path + position is all we render inline.
+        tree.Add(pad + $"pos: {FormatXZ(c.transform.position)}");
     }
 
     private static void DumpEventArray(List<string> tree, string pad, string name, GameObject[] arr)
@@ -277,7 +328,7 @@ public static class SceneDumper
     #endregion
     #region writing
 
-    private static void WriteHeader(List<string> lines, string scene, int roots)
+    private static void WriteHeader(List<string> lines, string scene)
     {
         lines.Add($"# Scene Dump: {scene}");
         lines.Add($"Generated: {Log.Time}");
@@ -296,24 +347,43 @@ public static class SceneDumper
             var entries = stubs[t];
             if (entries.Count == 0) continue;
 
+            // Drop runtime-instantiated clones — their paths won't survive a scene reload.
+            entries.RemoveAll(e => e.Path.Contains("(Clone)"));
+            if (entries.Count == 0) continue;
+
             lines.Add($"// --- {SimpleName(t)} ({entries.Count}) ---");
             string helper = StubHelper(t);
 
             if (IsPositionKeyed(t))
             {
-                // One helper call covers all instances; list positions in a comment.
                 lines.Add($"{helper};");
-                foreach (var e in entries) lines.Add($"//   pos: {FormatXZ(e.Position)}");
+                int shown = Math.Min(entries.Count, POS_LIST_CAP);
+                for (int i = 0; i < shown; i++) lines.Add($"//   pos: {FormatXZ(entries[i].Position)}");
+                if (entries.Count > shown) lines.Add($"//   ... (+{entries.Count - shown} more)");
             }
             else if (helper != null)
             {
-                foreach (var e in entries) lines.Add($"{helper}, \"{e.Path}\");");
+                // Dedupe by path; show count when > 1.
+                var byPath = new Dictionary<string, int>();
+                var order = new List<string>();
+                foreach (var e in entries)
+                {
+                    if (!byPath.ContainsKey(e.Path)) { byPath[e.Path] = 0; order.Add(e.Path); }
+                    byPath[e.Path]++;
+                }
+                foreach (var p in order)
+                {
+                    int n = byPath[p];
+                    string suffix = n > 1 ? $"  // x{n}" : "";
+                    lines.Add($"{helper}, \"{p}\");{suffix}");
+                }
             }
             else
             {
-                // No ActionType helper — emit a TODO scaffold.
-                lines.Add($"// TODO: no ActionType.{SimpleName(t)} helper exists; write a custom Find lambda.");
-                foreach (var e in entries) lines.Add($"//   path: \"{e.Path}\"   pos: {FormatXZ(e.Position)}");
+                lines.Add($"// TODO: no ActionType.{SimpleName(t)} helper; write a custom Find lambda.");
+                int shown = Math.Min(entries.Count, POS_LIST_CAP);
+                for (int i = 0; i < shown; i++) lines.Add($"//   path: \"{entries[i].Path}\"   pos: {FormatXZ(entries[i].Position)}");
+                if (entries.Count > shown) lines.Add($"//   ... (+{entries.Count - shown} more)");
             }
             lines.Add("");
         }
@@ -344,12 +414,10 @@ public static class SceneDumper
         public StubEntry(string path, Vector3 pos) { Path = path; Position = pos; }
     }
 
-    /// <summary> Position-keyed syncables use a single-arg helper that finds every instance. </summary>
     private static bool IsPositionKeyed(Type t) =>
         t == typeof(Glass) || t == typeof(StatueActivator) || t == typeof(LimboSwitch) ||
         t == typeof(Flammable) || t == typeof(ActivateArena) || t == typeof(FinalDoor);
 
-    /// <summary> Maps a syncable type to its ActionType helper prefix, or null if none exists. </summary>
     private static string StubHelper(Type t)
     {
         if (t == typeof(ObjectActivator))    return "ActionType.Act(l";
@@ -361,7 +429,7 @@ public static class SceneDumper
         if (t == typeof(Flammable))          return "ActionType.Flammable(l)";
         if (t == typeof(ActivateArena))      return "ActionType.Arena(l)";
         if (t == typeof(FinalDoor))          return "ActionType.Final(l)";
-        return null; // ActivateNextWaveHP, Door, ItemTrigger, ItemPlaceZone — custom lambda required
+        return null;
     }
 
     private static string Indent(int depth) => new(' ', depth * 3);

@@ -14,6 +14,8 @@ using Jaket.UI.Elements;
 using Jaket.UI.Fragments;
 using Jaket.World;
 
+using PhysicsLock = Jaket.UI.Lib.Fragment.PhysicsLock;
+
 /// <summary> Class responsible for additions to control and local display of emotes. </summary>
 public class Movement : MonoSingleton<Movement>
 {
@@ -128,11 +130,21 @@ public class Movement : MonoSingleton<Movement>
             UI.Spectator.UpdateCamera(!nm.dead && Emotes.Ends);
         }
 
-        if (!nm.dead) nm.rb.constraints = UI.AnyBlockingDialog
-            ? RigidbodyConstraints.FreezeAll
-            : Emotes.Current == 0xFF || Emotes.Current == 0x0B
-                ? RigidbodyConstraints.FreezeRotation
-                : RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ;
+        if (!nm.dead)
+        {
+            var horizontal = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ;
+            var physicsLock = UI.PhysicsLock;
+
+            nm.rb.constraints = physicsLock switch
+            {
+                PhysicsLock.Full       => RigidbodyConstraints.FreezeAll,
+                PhysicsLock.Horizontal => horizontal,
+                _ => Emotes.Current == 0xFF || Emotes.Current == 0x0B
+                    ? RigidbodyConstraints.FreezeRotation
+                    : horizontal
+            };
+            if (physicsLock == PhysicsLock.Horizontal) nm.rb.velocity = nm.rb.velocity with { x = 0f, z = 0f };
+        }
     }
 
     private void OnGUI()

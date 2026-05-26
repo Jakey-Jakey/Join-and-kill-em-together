@@ -143,7 +143,7 @@ public class Cerberus : Enemy
 
     [DynamicPatch(typeof(StatueBoss), nameof(StatueBoss.OrbSpawn))]
     [Prefix]
-    static bool Peace(StatueBoss __instance) => __instance.name[0] == 'L';
+    static bool Peace(StatueBoss __instance) => !__instance.TryGetEntity(out Cerberus _) || __instance.name[0] == 'L';
 
     [DynamicPatch(typeof(StatueBoss), nameof(StatueBoss.Enrage))]
     [Prefix]

@@ -12,6 +12,12 @@ public enum PacketType : byte
     Snapshot,
     /// <summary> Contains data of a hitscan shot. </summary>
     Hitscan,
+    /// <summary> Contains data of a transient damage effect. </summary>
+    Effect,
+    /// <summary> Contains data of a continuous beam segment. </summary>
+    Beam,
+    /// <summary> Contains data of a transient damage volume. </summary>
+    Hazard,
 
     /// <summary> Contains data of a dealt damage unit. </summary>
     Damage,

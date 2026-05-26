@@ -119,7 +119,7 @@ public class Rocket : Projectile
     [Prefix]
     static void Start(Grenade __instance)
     {
-        if (__instance && __instance.rocket && !__instance.enemy) Entities.Projectiles.Sync(__instance.gameObject);
+        if (__instance && __instance.rocket) Entities.Projectiles.Sync(__instance.gameObject);
     }
 
     [DynamicPatch(typeof(Grenade), nameof(Grenade.Explode))]

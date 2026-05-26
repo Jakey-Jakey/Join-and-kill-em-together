@@ -33,12 +33,35 @@ public class Projectiles : Vendor
         Events.OnTeamChange += () => Networking.Entities.Alive<Projectile>(p => p.UpdateIgnore());
     }
 
-    public EntityType Type(GameObject obj) => Vendor.Find
-    (
-        EntityType.Shell,
-        EntityType.ProjectileExpl,
-        p => p.name.Length == obj?.name.Length - 7 && (obj?.name.Contains(p.name) ?? false)
-    );
+    public EntityType Type(GameObject obj)
+    {
+        var type = Vendor.Find
+        (
+            EntityType.Shell,
+            EntityType.ProjectileExpl,
+            p => p.name.Length == obj?.name.Length - 7 && (obj?.name.Contains(p.name) ?? false)
+        );
+        if (type != EntityType.None || !obj) return type;
+
+        if (obj.TryGetComponent(out Grenade grenade))
+            return grenade.rocket ? EntityType.Rocket : EntityType.Core;
+
+        if (obj.TryGetComponent(out global::Nail nail))
+        {
+            if (nail.sawblade)
+                return nail.heated ? EntityType.SawbladeHeated : nail.fodderDamageBoost ? EntityType.SawbladeFodder : EntityType.SawbladeCommon;
+
+            return nail.heated ? EntityType.NailHeated : nail.fodderDamageBoost ? EntityType.NailFodder : EntityType.NailCommon;
+        }
+
+        if (obj.TryGetComponent(out Cannonball ball) && ball.physicsCannonball)
+            return EntityType.Cannonball;
+
+        if (obj.TryGetComponent(out global::Projectile projectile) && !projectile.decorative)
+            return projectile.explosive ? EntityType.ProjectileExpl : EntityType.ProjectileHell;
+
+        return EntityType.None;
+    }
 
     public GameObject Make(EntityType type, Vector3 position = default, Transform parent = null)
     {

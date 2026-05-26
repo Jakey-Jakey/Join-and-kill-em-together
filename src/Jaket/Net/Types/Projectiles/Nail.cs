@@ -20,10 +20,11 @@ public class Nail : Projectile
         base.Assign(this.agent = agent);
 
         agent.Get(out rb);
+        agent.Get(out global::Nail nail);
         agent.Rem<DestroyOnCheckpointRestart>();
         agent.Run(MasterKill, 5f);
 
-        if (!IsOwner) agent.Rem<CapsuleCollider>();
+        if (!IsOwner && !nail.enemy) agent.Rem<CapsuleCollider>();
     }
 
     #endregion
@@ -33,7 +34,7 @@ public class Nail : Projectile
     [Prefix]
     static void Start(global::Nail __instance)
     {
-        if (__instance && !__instance.sawblade && !__instance.chainsaw && !__instance.enemy) Entities.Projectiles.Sync(__instance.gameObject);
+        if (__instance && !__instance.sawblade && !__instance.chainsaw) Entities.Projectiles.Sync(__instance.gameObject);
     }
 
     [DynamicPatch(typeof(global::Nail), nameof(global::Nail.RemoveTime))]

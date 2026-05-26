@@ -136,11 +136,14 @@ public class Malicious : Enemy
 
     [DynamicPatch(typeof(MaliciousFace), nameof(MaliciousFace.BeamFire))]
     [Prefix]
-    static void Peace(MaliciousFace __instance) => __instance.isBeamPortalBlocked |= __instance.name[0] == 'R';
+    static void Peace(MaliciousFace __instance)
+    {
+        if (__instance.TryGetEntity(out Malicious _)) __instance.isBeamPortalBlocked |= __instance.name[0] == 'R';
+    }
 
     [DynamicPatch(typeof(MaliciousFace), nameof(MaliciousFace.ShootProj))]
     [Prefix]
-    static bool Peaoe(MaliciousFace __instance) => __instance.name[0] == 'L';
+    static bool Peaoe(MaliciousFace __instance) => !__instance.TryGetEntity(out Malicious _) || __instance.name[0] == 'L';
 
     [DynamicPatch(typeof(MaliciousFace), nameof(MaliciousFace.BreakCorpse))]
     [Prefix]

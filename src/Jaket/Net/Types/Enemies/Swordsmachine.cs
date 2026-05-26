@@ -177,7 +177,9 @@ public class Swordsmachine : Enemy
     [Prefix]
     static bool Leave(SwordsMachine __instance)
     {
-        if (__instance.TryGetEntity(out Swordsmachine s) && !s.Hidden) s.Kill();
+        if (!__instance.TryGetEntity(out Swordsmachine s)) return true;
+
+        if (!s.Hidden) s.Kill();
         return false;
     }
 

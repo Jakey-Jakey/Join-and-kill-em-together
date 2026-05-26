@@ -123,6 +123,8 @@ public abstract class Projectile : OwnableEntity
         cs.Each(c => c.enabled = !riding);
     }
 
+    protected virtual bool LocalCollision(Collider other) => false;
+
     public override void Damage(Reader r) { }
 
     public override void Killed(Reader r, int left)
@@ -152,7 +154,7 @@ public abstract class Projectile : OwnableEntity
         if (instance.TryGetEntity(out T t))
         {
             if (!eid && !other.TryGetComponent(out eid)) eid = other.GetComponent<EnemyIdentifierIdentifier>()?.eid;
-            if (!eid || !eid.TryGetComponent(out agent)) return t.IsOwner;
+            if (!eid || !eid.TryGetComponent(out agent)) return t.IsOwner || t is Projectile p && p.LocalCollision(other);
 
             if (t.IsOwner) return patch(eid, agent.Patron.Id, agent.Patron is RemotePlayer p && p.Team.Ally(), t);
             return false;

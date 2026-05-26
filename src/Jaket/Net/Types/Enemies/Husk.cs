@@ -149,7 +149,7 @@ public class Husk : Enemy
     [DynamicPatch(typeof(ZombieProjectiles), nameof(ZombieProjectiles.ThrowProjectile))]
     [DynamicPatch(typeof(ZombieProjectiles), nameof(ZombieProjectiles.ShootProjectile))]
     [Prefix]
-    static bool Peace(ZombieProjectiles __instance) => __instance.name[0] == 'L';
+    static bool Peace(ZombieProjectiles __instance) => !__instance.TryGetEntity(out Husk _) || __instance.name[0] == 'L';
 
     #endregion
 }

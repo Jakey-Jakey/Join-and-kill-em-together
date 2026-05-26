@@ -60,7 +60,7 @@ public class Sawblade : Projectile
     [Prefix]
     static void Start(global::Nail __instance)
     {
-        if (__instance && __instance.sawblade && !__instance.chainsaw && !__instance.enemy) Entities.Projectiles.Sync(__instance.gameObject);
+        if (__instance && __instance.sawblade && !__instance.chainsaw) Entities.Projectiles.Sync(__instance.gameObject);
     }
 
     [DynamicPatch(typeof(global::Nail), nameof(global::Nail.SawBreak))]

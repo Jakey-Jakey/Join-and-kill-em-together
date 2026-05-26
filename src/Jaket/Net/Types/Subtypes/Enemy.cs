@@ -136,7 +136,8 @@ public abstract class Enemy : OwnableEntity
         if (left >= 2 && r.Bool())
         {
             Boss = enemyId.isBoss = true;
-            PostHealth = enemy.health = r.Float();
+            PostHealth = r.Float();
+            if (enemy) enemy.health = PostHealth;
 
             int layers = r.Int();
             if (layers == 0) return;

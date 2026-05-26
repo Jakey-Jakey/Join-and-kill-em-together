@@ -62,7 +62,7 @@ public class Core : Projectile
     [Prefix]
     static void Start(Grenade __instance)
     {
-        if (__instance && !__instance.rocket && !__instance.enemy) Entities.Projectiles.Sync(__instance.gameObject);
+        if (__instance && !__instance.rocket) Entities.Projectiles.Sync(__instance.gameObject);
     }
 
     [DynamicPatch(typeof(Grenade), nameof(Grenade.Explode))]
@@ -81,7 +81,11 @@ public class Core : Projectile
 
     [DynamicPatch(typeof(Grenade), nameof(Grenade.Collision), [typeof(Collider), typeof(Vector3)])]
     [Prefix]
-    static bool Damage(Grenade __instance) => __instance.name[0] == 'L';
+    static bool Damage(Grenade __instance, Collider other)
+    {
+        if (!__instance.TryGetEntity(out Core c)) return __instance.name[0] == 'L';
+        return c.IsOwner || __instance.enemy && other.GetComponentInParent<NewMovement>() == NewMovement.Instance;
+    }
 
     #endregion
 }

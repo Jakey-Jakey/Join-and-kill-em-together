@@ -50,6 +50,21 @@ public class Server : Endpoint, ISocketManager
 
             Administration.Find(sender).Handle(type);
         });
+        Listen(PacketType.Effect, (con, sender, r, s) =>
+        {
+            Entities.Damage.Make(r);
+            Redirect(r, s, con);
+        });
+        Listen(PacketType.Beam, (con, sender, r, s) =>
+        {
+            Entities.Damage.Beam(r);
+            Redirect(r, s, con);
+        });
+        Listen(PacketType.Hazard, (con, sender, r, s) =>
+        {
+            Entities.Damage.Hazard(r);
+            Redirect(r, s, con);
+        });
 
         Listen(PacketType.Damage, (con, sender, r, s) =>
         {

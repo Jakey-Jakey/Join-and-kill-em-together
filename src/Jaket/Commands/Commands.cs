@@ -58,12 +58,6 @@ public static class Commands
                 LobbyController.CopyCode();
         });
 
-        Handler.Register("version", "Display Jaket and protocol versions", args => chat.Receive
-        (
-            $"[green]Jaket version:[] {Jaket.Version.Readable}\n" +
-            $"[green]Protocol version:[] {Jaket.Version.Protocol}"
-        ));
-
         Handler.Register("tts-volume", "\\[0-100]", "Set the volume of TTS", args =>
         {
             if (args.Length == 0)

@@ -65,7 +65,16 @@ public class PlayerList : Fragment
                     s.ProfileButton(m, false);
                     s.FillButton(ModAssets.LobbyBan, red, () => Administration.Ban(m.AccId));
                 }
-                else s.ProfileButton(m, true);
+                else if (m.IsMe) s.ProfileButton(m, true);
+                else
+                {
+                    s.ProfileButton(m, false);
+                    s.FillButton("♪", Administration.Muted.Contains(m.AccId) ? red : gray, () =>
+                    {
+                        if (!Administration.Muted.Remove(m.AccId)) Administration.Muted.Add(m.AccId);
+                        Rebuild();
+                    });
+                }
             }));
             if (!LobbyController.IsOwner) return;
 

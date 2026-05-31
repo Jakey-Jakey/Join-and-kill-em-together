@@ -12,6 +12,8 @@ public static class Administration
     public static List<uint> Hidden = new();
     /// <summary> Identifiers of banned players. </summary>
     public static List<uint> Banned = new();
+    /// <summary> Identifiers of locally muted players, whose voice, messages and sprays are suppressed. </summary>
+    public static List<uint> Muted = new();
 
     /// <summary> Whether the local player is privileged. </summary>
     public static bool Privileged;

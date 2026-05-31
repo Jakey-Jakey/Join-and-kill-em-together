@@ -40,7 +40,7 @@ public static class SprayDistributor
                 break;
             }
         }
-        if (Version.DEBUG) Log.Debug($"[SPRY] Uploading a spray owner by {owner}");
+        if (Version.DEBUG) Log.Debug($"[SPRY] Uploading a spray owned by {owner}");
     }
 
     /// <summary> Initializes a downloading of an image. </summary>
@@ -61,7 +61,7 @@ public static class SprayDistributor
                 break;
             }
         }
-        if (Version.DEBUG) Log.Debug($"[SPRY] Downloading a spray owner by {owner}");
+        if (Version.DEBUG) Log.Debug($"[SPRY] Downloading a spray owned by {owner}");
     }
 
     /// <summary> Processes all of the upload streams. </summary>
@@ -78,7 +78,7 @@ public static class SprayDistributor
 
         s.Chunks.Processed += bytesCount;
 
-        if (Version.DEBUG) Log.Debug($"[SPRY] Uploaded {s.Chunks.Progress * 100f:0.00}% of a spray owner by {s.Owner}");
+        if (Version.DEBUG) Log.Debug($"[SPRY] Uploaded {s.Chunks.Progress * 100f:0.00}% of a spray owned by {s.Owner}");
     });
 
     /// <summary> Processes a download stream of the given member. </summary>
@@ -90,7 +90,7 @@ public static class SprayDistributor
 
         s.Chunks.Processed += bytesCount;
 
-        if (Version.DEBUG) Log.Debug($"[SPRY] Downloaded {s.Chunks.Progress * 100f:0.00}% of a spray owner by {s.Owner}");
+        if (Version.DEBUG) Log.Debug($"[SPRY] Downloaded {s.Chunks.Progress * 100f:0.00}% of a spray owned by {s.Owner}");
 
         if (s.Done) SprayManager.Remote[s.Owner] = s.Image;
     });

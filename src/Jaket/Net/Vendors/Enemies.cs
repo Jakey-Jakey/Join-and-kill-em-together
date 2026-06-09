@@ -34,6 +34,9 @@ public class Enemies : Vendor
         for (EntityType i = EntityType.Malicious;       i <= EntityType.Malicious;       i++) Vendor.Suppliers[(byte)i] = (id, type) => new Malicious      (id, type);
         for (EntityType i = EntityType.Cerberus;        i <= EntityType.Cerberus;        i++) Vendor.Suppliers[(byte)i] = (id, type) => new Cerberus       (id, type);
 
+        // enemies without a specific implementation are handled generically, which is essential for the Cyber Grind
+        for (EntityType i = EntityType.Filth;           i <= EntityType.Sisyphus;        i++) Vendor.Suppliers[(byte)i] ??= (id, type) => new Generic      (id, type);
+
         Events.OnLoad += () =>
         {
             if (LobbyController.Online)
@@ -61,7 +64,7 @@ public class Enemies : Vendor
 
     public GameObject Make(EntityType type, Vector3 position = default, Transform parent = null)
     {
-        if (!type.IsEnemy()) return null;
+        if (!type.IsEnemy() || Vendor.Prefabs[(byte)type] == null) return null;
 
         var obj = Inst(Vendor.Prefabs[(byte)type], position);
 

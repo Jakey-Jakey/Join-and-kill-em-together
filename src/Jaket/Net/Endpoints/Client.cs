@@ -32,6 +32,7 @@ public class Client : Endpoint, IConnectionManager
             else
             {
                 entity = Entities.Supply(id, type);
+                if (entity == null) return;
 
                 entity.Read(r);
                 entity.Create();

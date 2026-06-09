@@ -39,8 +39,8 @@ public static class Entities
         Log.Info($"[ENTS] Loaded {vendors.Length} vendors");
     }
 
-    /// <summary> Instantiates a new entity with the given identifier. </summary>
-    public static Entity Supply(uint id, EntityType type) => Vendor.Suppliers[(int)type](id, type);
+    /// <summary> Instantiates a new entity with the given identifier, or returns null if the type has no supplier. </summary>
+    public static Entity Supply(uint id, EntityType type) => Vendor.Suppliers[(int)type]?.Invoke(id, type);
 
     /// <summary> Instantiates a new entity and generates an identifier for it. </summary>
     public static Entity Supply(EntityType type)

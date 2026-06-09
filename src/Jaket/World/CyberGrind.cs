@@ -28,6 +28,8 @@ public class CyberGrind
     public static int CurrentWave;
     /// <summary> Pattern of the current wave, synced by the host. </summary>
     public static ArenaPattern CurrentPattern;
+    /// <summary> Name of the current pattern, empty unless the host uses custom patterns. </summary>
+    public static string CurrentName = "";
 
     /// <summary> Wave progress synced by the host: dead, spawned and total amount of enemies. </summary>
     public static int DeadEnemies, TempEnemies, TotalEnemies = 999;
@@ -38,6 +40,8 @@ public class CyberGrind
     private static ArenaPattern pendingPattern;
     /// <summary> Number of the wave that is to be loaded. </summary>
     private static int pendingWave;
+    /// <summary> Name of the pattern that is to be loaded. </summary>
+    private static string pendingName = "";
 
     /// <summary> Radiant enemies whose entities are not created yet. </summary>
     private static List<EnemyIdentifier> spawned = new();
@@ -54,6 +58,7 @@ public class CyberGrind
         {
             CurrentWave = pendingWave = 0;
             CurrentPattern = pendingPattern = null;
+            CurrentName = pendingName = "";
 
             DeadEnemies = TempEnemies = 0;
             TotalEnemies = 999;
@@ -125,8 +130,11 @@ public class CyberGrind
     /// <summary> Whether the current wave has to be present in the level data. </summary>
     public static bool Synced => LobbyController.IsOwner && (Pending ?? Scene) == "Endless" && CurrentPattern != null;
 
+    /// <summary> Number of bytes that the wave takes in a packet, including the name of the pattern. </summary>
+    public static int WaveSize => WAVE_SIZE + 1 + CurrentName.Length;
+
     /// <summary> Number of bytes that the wave data takes in the level data. </summary>
-    public static int BufferSize => Synced ? 1 + WAVE_SIZE : 1;
+    public static int BufferSize => Synced ? 1 + WaveSize : 1;
 
     /// <summary> Writes the wave data into the level data so that late joiners catch up. </summary>
     public static void WriteData(Writer w)
@@ -147,6 +155,7 @@ public class CyberGrind
         w.Int(CurrentWave);
         EncodeHeights(ref w, CurrentPattern.heights);
         EncodePrefabs(ref w, CurrentPattern.prefabs);
+        w.String(CurrentName);
     }
 
     /// <summary> Reads a wave from memory and queues its loading. </summary>
@@ -156,6 +165,7 @@ public class CyberGrind
         pendingPattern = ScriptableObject.CreateInstance<ArenaPattern>();
         pendingPattern.heights = DecodeHeights(ref r);
         pendingPattern.prefabs = DecodePrefabs(ref r);
+        pendingName = r.String();
     }
 
     /// <summary> Performs an action received from the host. </summary>
@@ -190,8 +200,9 @@ public class CyberGrind
     {
         CurrentWave = grid.currentWave;
         CurrentPattern = pattern;
+        CurrentName = grid.customPatternMode ? CleanName(pattern.name) : "";
 
-        Networking.Send(PacketType.CyberAction, 1 + WAVE_SIZE, w =>
+        Networking.Send(PacketType.CyberAction, 1 + WaveSize, w =>
         {
             w.Byte(0);
             WriteWave(w);
@@ -218,7 +229,11 @@ public class CyberGrind
 
         CurrentWave = pendingWave;
         CurrentPattern = pendingPattern;
+        CurrentName = pendingName;
         pendingPattern = null;
+
+        // display the name of the pattern just like the vanilla custom mode does
+        if (CurrentName != "") HudMessageReceiver.Instance?.SendHudMessage(CurrentName, "", "", 0, silent: true);
 
         // activate the Huge Flying Panel™
         grid.waveNumberText.transform.parent.parent.gameObject.SetActive(true);
@@ -242,6 +257,20 @@ public class CyberGrind
 
         if (nm.dead) Movement.CyberRespawn();
     });
+
+    /// <summary> Extracts a readable name from the path of a custom pattern, mirroring the vanilla logic. </summary>
+    public static string CleanName(string name)
+    {
+        name = name.Split('\\', '/')[^1];
+        if (name.Length > 4) name = name[..^4];
+
+        name = name.Replace("CG_", "").Replace("Cg_", "").Replace("cg_", "").Replace('_', ' ');
+        name = System.Text.RegularExpressions.Regex.Replace(name, @"(\P{Ll})(\P{Ll}\p{Ll})", "$1 $2");
+        name = System.Text.RegularExpressions.Regex.Replace(name, @"(\p{Ll})(\P{Ll})",       "$1 $2");
+        name = name.Replace("  ", " ").Trim().ToUpper();
+
+        return name.Length > 64 ? name[..64] : name;
+    }
 
     #endregion
     #region pattern

@@ -32,12 +32,13 @@ public class Server : Endpoint, ISocketManager
             else
             {
                 entity = Entities.Supply(id, type);
+                if (entity == null) return;
 
                 entity.Read(r);
                 entity.Create();
                 entity.Push();
 
-                Administration.Find(sender).Handle(entity);
+                Administration.Find(sender)?.Handle(entity);
             }
         });
 
@@ -48,7 +49,7 @@ public class Server : Endpoint, ISocketManager
             Entities.Hitscans.Make(type, r.Vector(), r.Vector(), r.Bool(), r.Byte());
             Redirect(r, s, con);
 
-            Administration.Find(sender).Handle(type);
+            Administration.Find(sender)?.Handle(type);
         });
 
         Listen(PacketType.Damage, (con, sender, r, s) =>
@@ -224,7 +225,7 @@ public class Server : Endpoint, ISocketManager
     public void OnMessage(Connection con, NetIdentity netId, Ptr data, int size, long msg, long time, int channel)
     {
         Handle(con, netId.SteamId.AccountId, data, size);
-        Administration.Find(netId.SteamId.AccountId).Handle();
+        Administration.Find(netId.SteamId.AccountId)?.Handle();
     }
 
     #endregion

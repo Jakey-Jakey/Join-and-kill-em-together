@@ -65,7 +65,7 @@ public class World
     #region data
 
     /// <summary> Number of bytes that the world data takes in a snapshot. </summary>
-    public static int BufferSize => 4 + (Pending ?? Scene).Length + Version.Readable.Length + performed.Count(b => b) * 2 + pos.Count(p => p != default) * 8;
+    public static int BufferSize => 4 + (Pending ?? Scene).Length + Version.Readable.Length + performed.Count(b => b) * 2 + pos.Count(p => p != default) * 8 + CyberGrind.BufferSize;
 
     /// <summary> Writes the world data into a snapshot. </summary>
     public static void WriteData(Writer w)
@@ -85,6 +85,8 @@ public class World
 
             for (j = 0; j < k; j++) { w.Float(pos[POOL * i + j].x); w.Float(pos[POOL * i + j].y); }
         }
+
+        CyberGrind.WriteData(w);
     }
 
     /// <summary> Reads the world data from a snapshot. </summary>
@@ -110,6 +112,8 @@ public class World
                 performed[i] = true;
                 for (int j = 0; j < k; j++) pos[POOL * i + j] = new(r.Float(), r.Float());
             }
+
+            CyberGrind.ReadData(r);
         }
     }
 

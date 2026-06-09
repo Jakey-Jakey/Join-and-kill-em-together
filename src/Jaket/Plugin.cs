@@ -81,6 +81,7 @@ public class Plugin : MonoBehaviour
 
         SprayManager.Load();
         ActionList.Load();
+        CyberGrind.Load();
         World.World.Load();
         Gameflow.Load();
 

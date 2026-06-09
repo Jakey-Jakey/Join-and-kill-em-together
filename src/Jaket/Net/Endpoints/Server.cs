@@ -113,6 +113,12 @@ public class Server : Endpoint, ISocketManager
             Redirect(r, s, con);
         });
 
+        Listen(PacketType.CyberAction, (con, sender, r, s) =>
+        {
+            // the host is the only authority of the Cyber Grind, so the packet is dropped
+            if (Version.DEBUG) Log.Debug($"[SERVER] {sender} sent a cyber action albeit not being the host");
+        });
+
         /*
         Listen(PacketType.Vote, (con, sender, r, s) =>
         {

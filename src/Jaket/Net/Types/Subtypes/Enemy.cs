@@ -54,6 +54,13 @@ public abstract class Enemy : OwnableEntity
 
     public virtual void Heal() => enemy.health = Mathf.Min(PostHealth, enemy.health + PostHealth / (LobbyController.Lobby?.MemberCount ?? 1f));
 
+    /// <summary> Applies the radiance buffs to the enemy. Used by the Cyber Grind synchronization. </summary>
+    public void Irradiate()
+    {
+        enemyId.HealthBuff();
+        enemyId.SpeedBuff();
+    }
+
     public virtual void Rage(bool enraged) => Enraged = enraged;
 
     public virtual float Rate(LocalPlayer target) => nm.dead ? float.MaxValue : (nm.transform.position - agent.Position).sqrMagnitude;

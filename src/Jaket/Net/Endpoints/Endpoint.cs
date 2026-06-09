@@ -34,6 +34,7 @@ public abstract class Endpoint
         var type = r.PacketType();
 
         if (Networking.Loading && type != PacketType.Level && type != PacketType.ImageHeader && type != PacketType.ImageChunk) return;
+        if ((int)type >= handlers.Length || handlers[(int)type] == null) return;
 
         handlers[(int)type](con, sender, r, size);
         Stats.ReadBs += size;

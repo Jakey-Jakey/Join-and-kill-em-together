@@ -30,6 +30,7 @@
     <Reference Include="$(ManagedPath)/Facepunch.Steamworks.Win64.dll" />
     <Reference Include="$(ManagedPath)/plog.dll" />
 
+    <Reference Include="$(ManagedPath)/Unity.AI.Navigation.dll" />
     <Reference Include="$(ManagedPath)/Unity.Addressables.dll" />
     <Reference Include="$(ManagedPath)/Unity.InputSystem.dll" />
     <Reference Include="$(ManagedPath)/Unity.ResourceManager.dll" />

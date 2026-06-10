@@ -160,7 +160,16 @@ public abstract class Enemy : OwnableEntity
         else
             enemyId.InstaKill();
 
-        enemyId.dontCountAsKills = true;
+        Dest(agent);
+    }
+
+    /// <summary> Hides the entity of an enemy that died on its own, leaving the vanilla death sequence untouched. </summary>
+    public void Bury()
+    {
+        if (Remain)
+            LastHidden = Time.time + 240f;
+        else
+            Hidden = true;
 
         Dest(agent);
     }
@@ -175,18 +184,29 @@ public abstract class Enemy : OwnableEntity
         if (__instance) Entities.Enemies.Sync(__instance.gameObject, __instance.IsSandboxEnemy);
     }
 
+    // the death is already being processed by the local game, so the kill is only broadcast: applying it locally would
+    // set dontCountAsKills before the deferred death counters run, stalling the Cyber Grind on statue and mass deaths
+
     [DynamicPatch(typeof(EnemyIdentifier), nameof(EnemyIdentifier.Explode))]
     [Prefix]
     static void Break(EnemyIdentifier __instance)
     {
-        if (__instance.TryGetEntity(out Enemy e) && !e.Hidden) e.Kill(2, w => { w.Bool(true); w.Bool(true); });
+        if (__instance.TryGetEntity(out Enemy e) && !e.Hidden)
+        {
+            e.Kill(2, w => { w.Bool(true); w.Bool(true); }, false);
+            e.Bury();
+        }
     }
 
     [DynamicPatch(typeof(EnemyIdentifier), nameof(EnemyIdentifier.ProcessDeath))]
     [Prefix]
     static void Death(EnemyIdentifier __instance)
     {
-        if (__instance.TryGetEntity(out Enemy e) && !e.Hidden) e.Kill(2, w => { w.Bool(true); w.Bool(false); });
+        if (__instance.TryGetEntity(out Enemy e) && !e.Hidden)
+        {
+            e.Kill(2, w => { w.Bool(true); w.Bool(false); }, false);
+            e.Bury();
+        }
     }
 
     [DynamicPatch(typeof(EnemyIdentifier), nameof(EnemyIdentifier.UpdateTarget))]

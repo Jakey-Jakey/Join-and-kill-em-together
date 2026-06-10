@@ -9,8 +9,8 @@ using Jaket.IO;
 /// <summary> Abstract entity of any type whose state is synchronized across the network via snapshots. </summary>
 public abstract class Entity
 {
-    /// <summary> Unique identifier of the entity, account ids are used for players. </summary>
-    public readonly uint Id;
+    /// <summary> Unique identifier of the entity, account ids are used for players. Mutable only because the EOS backend assigns the local id after an asynchronous login. </summary>
+    public uint Id;
     /// <summary> Type of the entity, such as player or enemy of some kind. </summary>
     public readonly EntityType Type;
 

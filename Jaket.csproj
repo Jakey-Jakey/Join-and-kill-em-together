@@ -22,6 +22,11 @@
   <Import Project="Path.props" />
 
   <ItemGroup>
+    <!-- the EOS SDK builds as its own assembly and the spike is a separate plugin -->
+    <Compile Remove="lib/**;src/JaketEosSpike/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" />
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.29" />

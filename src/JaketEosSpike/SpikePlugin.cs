@@ -39,11 +39,11 @@ public class SpikePlugin : BaseUnityPlugin
 
     void Awake()
     {
-        productId    = Config.Bind("EOS", "ProductId",    "", "Product ID from the Epic Developer Portal");
-        sandboxId    = Config.Bind("EOS", "SandboxId",    "", "Sandbox ID from the Epic Developer Portal");
-        deploymentId = Config.Bind("EOS", "DeploymentId", "", "Deployment ID from the Epic Developer Portal");
-        clientId     = Config.Bind("EOS", "ClientId",     "", "Client ID of a GameClient policy client");
-        clientSecret = Config.Bind("EOS", "ClientSecret", "", "Client secret of that client");
+        productId    = Config.Bind("EOS", "ProductId",    "52c1ab4a246f4e929261b0e416ea91ee", "Product ID from the Epic Developer Portal");
+        sandboxId    = Config.Bind("EOS", "SandboxId",    "755b82da1b0a4841978bb9a66ba70b0a", "Sandbox ID from the Epic Developer Portal");
+        deploymentId = Config.Bind("EOS", "DeploymentId", "73d4f357e42f439d8ffbcfc14b7cbc0f", "Deployment ID from the Epic Developer Portal");
+        clientId     = Config.Bind("EOS", "ClientId",     "xyza7891hQ0lN5EO6ONdKiiBx8QLC734", "Client ID of a GameClient policy client");
+        clientSecret = Config.Bind("EOS", "ClientSecret", "zH4HCv0YBkMw3Y3UiliyWzKkrPJe0pVUlQwHb1cQvJs", "Client secret of that client");
 
         if (productId.Value == "")
         {

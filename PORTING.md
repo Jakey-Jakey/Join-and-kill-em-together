@@ -91,8 +91,12 @@ Edits were kept mechanical; the `Connection` name is preserved in endpoint files
 
 ## Epic Games portal registration (one-time, human step)
 
-The EOS credentials in `BepInEx/config/Jaket.Backends.cfg` ship as empty placeholders. To make the
-Epic backend work, someone has to register a product (free):
+**Already done for this fork**: the product "Multikill" is registered and its credentials are baked
+in as the config defaults of `EpicBackend.Load` and the spike, so builds work out of the box.
+Credentials of a GameClient policy client are designed to ship inside game binaries. The values can
+still be overridden in `BepInEx/config/Jaket.Backends.cfg`.
+
+For reference, or to register a different product (free):
 
 1. Sign up at https://dev.epicgames.com/portal and accept the EOS developer agreement.
 2. Create an **Organization**, then a **Product** (e.g. "Jaket").
@@ -102,11 +106,12 @@ Epic backend work, someone has to register a product (free):
    (Product Settings → Sandboxes → Deployments).
 5. Under **Epic Account Services** nothing is needed — the mod uses the Connect interface with
    Device IDs and never touches Epic accounts.
-6. Fill the five values into `Jaket.Backends.cfg` (section `[EOS]`) on every machine, or bake them
-   in as defaults before distributing the fork. The client secret of a GameClient policy is not
-   sensitive in the way a server secret is, but treat the portal account itself with care.
+6. Fill the five values into `Jaket.Backends.cfg` (section `[EOS]`), or bake them in as defaults
+   before distributing the fork. The client secret of a GameClient policy is not sensitive in the
+   way a server secret is, but treat the portal account itself with care.
 
-Also set `[EOS] PlayerName` — there is no platform to take a display name from.
+Every player should set `[EOS] PlayerName` — there is no platform to take a display name from
+(it falls back to the Windows user name).
 
 ## Manual testing
 
@@ -114,10 +119,10 @@ The compile-level validation is automated; runtime testing needs two game instan
 machines (EOS device ids are per-machine, and two instances on one machine would collide):
 
 1. **Spike first** (`src/JaketEosSpike`): copy `JaketEosSpike.dll`, `Epic.OnlineServices.dll` and
-   `EOSSDK-Win64-Shipping.dll` into `BepInEx/plugins/JaketEosSpike/` on both machines, fill the
-   credentials in `BepInEx/config/xzxADIxzx.Jaket.EosSpike.cfg`, start both games and watch the
-   logs: the first instance hosts a lobby, the second finds it, joins and pings; the host echoes.
-   `=== SPIKE TEST PASSED ===` on the client log is the acceptance criterion.
+   `EOSSDK-Win64-Shipping.dll` into `BepInEx/plugins/JaketEosSpike/` on both machines (credentials
+   are baked in), start both games and watch the logs: the first instance hosts a lobby, the second
+   finds it, joins and pings; the host echoes. `=== SPIKE TEST PASSED ===` on the client log is the
+   acceptance criterion.
 2. **Full mod**: set `Backend = epic` in `Jaket.Backends.cfg` on both machines, host a lobby on
    one, copy the code (the invite button does the same), join by code on the other. Verify: level
    sync, player movement, chat and TTS, death messages, emotes/RPS, sprays, bans (the banned

@@ -58,12 +58,13 @@ public class EpicBackend : INetBackend
 
     public void Load()
     {
+        // the defaults are the credentials of the registered product; GameClient policy credentials are meant to ship inside game binaries
         var cfg = NetBackends.Config;
-        var productId    = cfg.Bind("EOS", "ProductId",    "", "Product ID from the Epic Developer Portal").Value;
-        var sandboxId    = cfg.Bind("EOS", "SandboxId",    "", "Sandbox ID from the Epic Developer Portal").Value;
-        var deploymentId = cfg.Bind("EOS", "DeploymentId", "", "Deployment ID from the Epic Developer Portal").Value;
-        var clientId     = cfg.Bind("EOS", "ClientId",     "", "Client ID of a GameClient policy client").Value;
-        var clientSecret = cfg.Bind("EOS", "ClientSecret", "", "Client secret of that client").Value;
+        var productId    = cfg.Bind("EOS", "ProductId",    "52c1ab4a246f4e929261b0e416ea91ee", "Product ID from the Epic Developer Portal").Value;
+        var sandboxId    = cfg.Bind("EOS", "SandboxId",    "755b82da1b0a4841978bb9a66ba70b0a", "Sandbox ID from the Epic Developer Portal").Value;
+        var deploymentId = cfg.Bind("EOS", "DeploymentId", "73d4f357e42f439d8ffbcfc14b7cbc0f", "Deployment ID from the Epic Developer Portal").Value;
+        var clientId     = cfg.Bind("EOS", "ClientId",     "xyza7891hQ0lN5EO6ONdKiiBx8QLC734", "Client ID of a GameClient policy client").Value;
+        var clientSecret = cfg.Bind("EOS", "ClientSecret", "zH4HCv0YBkMw3Y3UiliyWzKkrPJe0pVUlQwHb1cQvJs", "Client secret of that client").Value;
 
         selfName = cfg.Bind("EOS", "PlayerName", Environment.UserName, "Display name visible to other players").Value;
         if (string.IsNullOrWhiteSpace(selfName) || selfName.Length > 24) selfName = "Player";

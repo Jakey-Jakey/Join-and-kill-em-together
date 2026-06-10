@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Epic Online Services C# SDK v1.19.1.2, vendored from the official SDK zip (EOS-SDK-CSharp-Release).
+       Compiled outside Unity, so the target platform must be set explicitly via EOS_PLATFORM_WINDOWS_64;
+       this makes Common.LIBRARY_NAME resolve to "EOSSDK-Win64-Shipping.dll". -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Epic.OnlineServices</AssemblyName>
+    <RootNamespace>Epic.OnlineServices</RootNamespace>
+    <Version>1.19.1.2</Version>
+    <DefineConstants>$(DefineConstants);EOS_PLATFORM_WINDOWS_64</DefineConstants>
+    <NoWarn>CS0162;CS0419;CS1570;CS1573;CS1591</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Source/**/Android/**;Source/**/IOS/**" />
+  </ItemGroup>
+
+</Project>

@@ -6,3 +6,8 @@ obj/*
 
 *.sln
 *.bat
+
+lib/eos-sdk/bin/*
+lib/eos-sdk/obj/*
+src/JaketEosSpike/bin/*
+src/JaketEosSpike/obj/*

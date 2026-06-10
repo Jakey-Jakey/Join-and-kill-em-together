@@ -1,0 +1,38 @@
+name: upstream drift
+
+# Weekly check that the EOS fork still merges cleanly with upstream main and that
+# everything buildable without the game's DLLs still compiles. The main Jaket.csproj
+# references Assembly-CSharp and other game assemblies via Path.props, which cannot be
+# shipped to CI, so the mod itself is only verified locally; see PORTING.md.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build the EOS SDK library
+        run: dotnet build lib/eos-sdk/Epic.OnlineServices.csproj
+
+      - name: Build the spike plugin
+        run: dotnet build src/JaketEosSpike/JaketEosSpike.csproj
+
+      - name: Try merging upstream main
+        run: |
+          git config user.name drift-check
+          git config user.email drift@invalid
+          git remote add upstream https://github.com/xzxADIxzx/Join-and-kill-em-together.git
+          git fetch upstream main
+          git merge --no-commit --no-ff upstream/main || { echo "::error::Merge with upstream/main produces conflicts, the fork has drifted"; git diff --name-only --diff-filter=U; exit 1; }
+          echo "Upstream merges cleanly"

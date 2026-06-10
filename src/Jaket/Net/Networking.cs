@@ -1,9 +1,9 @@
 namespace Jaket.Net;
 
-using Steamworks;
-using Steamworks.Data;
 using System.Collections.Generic;
 using UnityEngine;
+
+using Connection = Jaket.Net.Backends.INetConnection;
 
 using Jaket.Assets;
 using Jaket.Content;
@@ -11,9 +11,6 @@ using Jaket.IO;
 using Jaket.Net.Admin;
 using Jaket.Net.Endpoints;
 using Jaket.Net.Types;
-using Jaket.Sam;
-using Jaket.UI;
-using Jaket.UI.Dialogs;
 using Jaket.World;
 
 /// <summary> Class responsible for updating endpoints, transmitting packets and managing entities. </summary>
@@ -93,7 +90,7 @@ public static class Networking
             if (LobbyController.IsOwner)
                 Server.Open();
             else
-                Client.Connect(LobbyController.Lobby.Value.Owner.Id);
+                Client.Connect();
 
             Loading = !LobbyController.IsOwner;
             Clear();
@@ -118,49 +115,6 @@ public static class Networking
             }
         };
 
-        SteamMatchmaking.OnChatMessage += (lobby, member, msg) =>
-        {
-            if (Administration.Banned.Contains(member.AccId)) return;
-            if (msg.Length > Chat.MAX_LENGTH + 4) msg = msg[..Chat.MAX_LENGTH];
-
-            string name = member.Name.Replace("[", "\\[");
-
-            if (msg == "#/d")
-            {
-                Bundle.Msg("player.died", name);
-
-                StyleHUD.Instance.AddPoints(Mathf.RoundToInt(420f * StyleCalculator.Instance.airTime), Bundle.Parse("[green]FRATRICIDE"));
-
-                Gameflow.OnDeath(member);
-
-                if (LobbyConfig.HealBosses) Entities.Alive<Enemy>(e => e.Boss, e => e.Heal());
-            }
-
-            else if (msg.StartsWith("#/s") && uint.TryParse(msg[3..], out uint sid) && lobby.Owner.Id == member.Id)
-                Gameflow.OnStart(sid);
-
-            else if (msg.StartsWith("#/v") && byte.TryParse(msg[3..], out byte vid) && lobby.Owner.Id == member.Id)
-                Gameflow.OnVictory(vid);
-
-            else if (msg.StartsWith("#/b") && uint.TryParse(msg[3..], out uint bid) && lobby.Owner.Id == member.Id)
-                Bundle.Msg("player.banned", bid.Name);
-
-            else if (msg.StartsWith("#/r") && byte.TryParse(msg[3..], out byte rps))
-                Bundle.Msg("emote.roll", name, $"#emote.{rps}");
-
-            else if (msg.StartsWith("#/t"))
-            {
-                if (member.IsMe)
-                    SamAPI.TryPlay(msg = msg[3..], LocalPlayer.Voice);
-
-                else if (Entities.TryGetValue(member.AccId, out var e) && e is RemotePlayer p)
-                    SamAPI.TryPlay(msg = msg[3..], p.Voice);
-
-                UI.Chat.Receive(msg, GetColor(member), name, Chat.TTS_TAG);
-            }
-            else
-                UI.Chat.Receive(msg, GetColor(member), name);
-        };
     }
 
     /// <summary> Updates network logic, i.e. receives incoming data and flushes outcoming one. </summary>
@@ -211,7 +165,7 @@ public static class Networking
     /// <summary> Sends the packet to the given connection and updates statistics. </summary>
     public static void Send(Connection con, Ptr data, int size)
     {
-        con.SendMessage(data, size);
+        con.Send(data, size);
         Stats.SentBs += size;
     }
 
@@ -230,13 +184,13 @@ public static class Networking
     /// <summary> Forwards the packet to either all of the clients or host. </summary>
     public static void Redirect(Ptr data, int size) => Connections.Each(c => Send(c, data, size));
 
-    /// <summary> Returns the team of the given member. </summary>
-    public static Team GetTeam(Friend member) => member.IsMe
+    /// <summary> Returns the team of the member with the given identifier. </summary>
+    public static Team GetTeam(uint id) => id == AccId
         ? LocalPlayer.Team
-        : Entities.TryGetValue(member.AccId, out var entity) && entity != null && entity is RemotePlayer player ? player.Team : Team.Yellow;
+        : Entities.TryGetValue(id, out var entity) && entity != null && entity is RemotePlayer player ? player.Team : Team.Yellow;
 
-    /// <summary> Returns the color of the given member's team. </summary>
-    public static string GetColor(Friend member) => ColorUtility.ToHtmlStringRGBA(GetTeam(member).Color());
+    /// <summary> Returns the color of the team of the member with the given identifier. </summary>
+    public static string GetColor(uint id) => ColorUtility.ToHtmlStringRGBA(GetTeam(id).Color());
 
     #endregion
 }

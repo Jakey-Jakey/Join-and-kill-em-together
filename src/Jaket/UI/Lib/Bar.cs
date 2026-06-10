@@ -1,6 +1,5 @@
 namespace Jaket.UI.Lib;
 
-using Steamworks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +8,7 @@ using ImageType = UnityEngine.UI.Image.Type;
 using Jaket.Content;
 using Jaket.Input;
 using Jaket.Net;
+using Jaket.Net.Backends;
 
 using static Pal;
 
@@ -143,8 +143,8 @@ public class Bar : MonoBehaviour
         Builder.TextButton(Resolve("TeamButton", 80f), Tex.Fill, team.Color(), team == Team.Pink ? "UwU" : "", 24, TextAnchor.MiddleCenter, callback);
 
     /// <summary> Adds a text button, it opens the profile of the given member. </summary>
-    public Button ProfileButton(Friend member, bool full) =>
-        Builder.TextButton(Resolve("Profile", full ? 432f : 384f), Tex.Large, Networking.GetTeam(member).Color(), member.Name, 24, TextAnchor.MiddleCenter, () => SteamFriends.OpenUserOverlay(member.Id, "steamid"));
+    public Button ProfileButton(NetMember member, bool full) =>
+        Builder.TextButton(Resolve("Profile", full ? 432f : 384f), Tex.Large, Networking.GetTeam(member.AccId).Color(), member.Name, 24, TextAnchor.MiddleCenter, () => NetBackends.Current.OpenProfile(member));
 
     /// <summary> Adds a button that corresponds to the style of Discord. </summary>
     public Button DiscordButton(string text) =>

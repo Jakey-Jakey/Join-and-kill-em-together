@@ -47,7 +47,7 @@ public class PlayerList : Fragment
                 }));
             });
         });
-        if (LobbyController.Online) Bar(LobbyController.Lobby.Value.MemberCount * 48f + (LobbyController.IsOwner ? 120f : 48f), b =>
+        if (LobbyController.Online) Bar(LobbyController.Lobby.MemberCount * 48f + (LobbyController.IsOwner ? 120f : 48f), b =>
         {
             b.Setup(true);
             b.Text("#player-list.list", 32f, 32);

@@ -141,7 +141,7 @@ public class Chat : Fragment
             }
             else
             {
-                if (!Commands.Handler.Handle(msg)) LobbyController.Lobby?.SendChatString(Settings.AutoTTS ? "#/t" + msg : msg);
+                if (!Commands.Handler.Handle(msg)) ChatChannel.Send(Settings.AutoTTS ? "#/t" + msg : msg);
 
                 sent[0] = msg;
                 sent.Move();

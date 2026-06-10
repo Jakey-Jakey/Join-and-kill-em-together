@@ -65,12 +65,7 @@ public class LobbyTab : Fragment
 
             accessibility = b.TextButton("", callback: () =>
             {
-                switch (accessLevel = ++accessLevel % 3)
-                {
-                    case 0: LobbyController.Lobby?.SetPrivate();     break;
-                    case 1: LobbyController.Lobby?.SetFriendsOnly(); break;
-                    case 2: LobbyController.Lobby?.SetPublic();      break;
-                }
+                LobbyController.Lobby?.SetVisibility((byte)(accessLevel = ++accessLevel % 3));
                 Rebuild();
             });
 

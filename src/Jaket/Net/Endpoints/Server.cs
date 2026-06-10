@@ -1,23 +1,23 @@
 namespace Jaket.Net.Endpoints;
 
-using Steamworks;
-using Steamworks.Data;
+using Connection = Jaket.Net.Backends.INetConnection;
 
 using Jaket.Content;
 using Jaket.IO;
 using Jaket.Net.Admin;
+using Jaket.Net.Backends;
 using Jaket.Net.Types;
 using Jaket.Sprays;
 using Jaket.UI.Elements;
 using Jaket.World;
 
 /// <summary> Endpoint of a server connection that processes socket events and client data. </summary>
-public class Server : Endpoint, ISocketManager
+public class Server : Endpoint, INetListener
 {
     static Pools ents => Networking.Entities;
 
-    /// <summary> Steam networking sockets backend. </summary>
-    public SocketManager Manager { get; private set; }
+    /// <summary> Networking sockets backend. </summary>
+    public INetServer Manager { get; private set; }
 
     public override void Create()
     {
@@ -113,6 +113,11 @@ public class Server : Endpoint, ISocketManager
             Redirect(r, s, con);
         });
 
+        Listen(PacketType.Chat, (con, sender, r, s) =>
+        {
+            if (Redirect(ref r, s, con, sender)) ChatChannel.Receive(sender, s - 5, r);
+        });
+
         /*
         Listen(PacketType.Vote, (con, sender, r, s) =>
         {
@@ -159,23 +164,16 @@ public class Server : Endpoint, ISocketManager
         Manager = null;
     }
 
-    public void Open()
-    {
-        Manager = SteamNetworkingSockets.CreateRelaySocket<SocketManager>(4242);
-        Manager.Interface = this;
-    }
+    public void Open() => Manager = NetBackends.Current.OpenServer(this);
 
     #region manager
 
-    public void OnConnecting(Connection con, ConnectionInfo info)
+    public void OnConnecting(Connection con, uint accId, bool authentic)
     {
         Log.Info("[SERVER] Someone is connecting...");
 
-        var netId = info.Identity;
-        var accId = netId.SteamId.AccountId;
-
         // multiple connections are forbidden
-        if (netId.IsSteamId && Networking.Connections.Any(c => c.UserData == accId))
+        if (authentic && Networking.Connections.Any(c => c.UserData == accId))
         {
             Log.Debug("[SERVER] Connection is rejected: already connected");
             con.Close();
@@ -183,7 +181,7 @@ public class Server : Endpoint, ISocketManager
         }
 
         // restrain naughty players from rejoining
-        if (netId.IsSteamId && Administration.Banned.Contains(accId))
+        if (authentic && Administration.Banned.Contains(accId))
         {
             Log.Debug("[SERVER] Connection is rejected: banned");
             con.Close();
@@ -191,9 +189,9 @@ public class Server : Endpoint, ISocketManager
         }
 
         // only the members of the lobby are allowed to connect
-        if (netId.IsSteamId && !LobbyController.Contains(accId))
+        if (authentic && !LobbyController.Contains(accId))
         {
-            Log.Debug("[SERVER] Connection is rejected: either non-steam or not in the lobby");
+            Log.Debug("[SERVER] Connection is rejected: either non-authentic or not in the lobby");
             con.Close();
             return;
         }
@@ -203,22 +201,22 @@ public class Server : Endpoint, ISocketManager
         con.Accept();
     }
 
-    public void OnConnected(Connection con, ConnectionInfo info)
+    public void OnConnected(Connection con, uint accId)
     {
-        Log.Info($"[SERVER] {info.Identity.SteamId.AccountId} connected");
+        Log.Info($"[SERVER] {accId} connected");
         Networking.Send(PacketType.Level, World.BufferSize, World.WriteData, (data, size) => Networking.Send(con, data, size));
     }
 
-    public void OnDisconnected(Connection con, ConnectionInfo info)
+    public void OnDisconnected(Connection con, uint accId)
     {
-        Log.Info($"[SERVER] {info.Identity.SteamId.AccountId} disconnected");
-        if (ents.TryGetValue(info.Identity.SteamId.AccountId, out var e) && e is RemotePlayer p) p.Kill();
+        Log.Info($"[SERVER] {accId} disconnected");
+        if (ents.TryGetValue(accId, out var e) && e is RemotePlayer p) p.Kill();
     }
 
-    public void OnMessage(Connection con, NetIdentity netId, Ptr data, int size, long msg, long time, int channel)
+    public void OnMessage(Connection con, uint sender, Ptr data, int size)
     {
-        Handle(con, netId.SteamId.AccountId, data, size);
-        Administration.Find(netId.SteamId.AccountId).Handle();
+        Handle(con, sender, data, size);
+        Administration.Find(sender).Handle();
     }
 
     #endregion

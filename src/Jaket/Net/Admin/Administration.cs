@@ -55,7 +55,7 @@ public static class Administration
         Networking.Connections.Each(c => c.UserData == id, c => c.Close());
         Banned.Add(id);
 
-        LobbyController.Lobby?.SendChatString("#/b" + id);
+        ChatChannel.Send("#/b" + id);
         LobbyConfig.Banned = Banned.ConvertAll(i => i.ToString());
     }
 

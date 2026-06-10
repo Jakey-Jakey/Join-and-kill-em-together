@@ -1,23 +1,23 @@
 namespace Jaket.Net.Endpoints;
 
-using Steamworks;
-using Steamworks.Data;
+using Connection = Jaket.Net.Backends.INetConnection;
 
 using Jaket.Content;
 using Jaket.IO;
 using Jaket.Net.Admin;
+using Jaket.Net.Backends;
 using Jaket.Net.Types;
 using Jaket.Sprays;
 using Jaket.UI.Elements;
 using Jaket.World;
 
 /// <summary> Endpoint of a client connection that processes socket events and server data. </summary>
-public class Client : Endpoint, IConnectionManager
+public class Client : Endpoint, INetListener
 {
     static Pools ents => Networking.Entities;
 
-    /// <summary> Steam networking sockets backend. </summary>
-    public ConnectionManager Manager { get; private set; }
+    /// <summary> Networking sockets backend. </summary>
+    public INetClient Manager { get; private set; }
 
     public override void Create()
     {
@@ -91,6 +91,8 @@ public class Client : Endpoint, IConnectionManager
 
         Listen(PacketType.WorldAction, r => World.Perform(r.Byte(), new(r.Float(), r.Float())));
 
+        Listen(PacketType.Chat, (con, sender, r, s) => ChatChannel.Receive(r.Id(), s - 5, r));
+
         /*
         Listen(PacketType.Vote, r => Votes.UpdateVote(r.Id(), r.Byte()));
         */
@@ -122,21 +124,17 @@ public class Client : Endpoint, IConnectionManager
         Manager = null;
     }
 
-    public void Connect(SteamId id)
-    {
-        Manager = SteamNetworkingSockets.ConnectRelay<ConnectionManager>(id, 4242);
-        Manager.Interface = this;
-    }
+    public void Connect() => Manager = NetBackends.Current.Connect(this);
 
     #region manager
 
-    public void OnConnecting(ConnectionInfo info) => Log.Info("[CLIENT] Connecting...");
+    public void OnConnecting(Connection con, uint accId, bool authentic) => Log.Info("[CLIENT] Connecting...");
 
-    public void OnConnected(ConnectionInfo info) => Log.Info("[CLIENT] Connected");
+    public void OnConnected(Connection con, uint accId) => Log.Info("[CLIENT] Connected");
 
-    public void OnDisconnected(ConnectionInfo info) => Log.Info("[CLIENT] Disconnected");
+    public void OnDisconnected(Connection con, uint accId) => Log.Info("[CLIENT] Disconnected");
 
-    public void OnMessage(Ptr data, int size, long msg, long time, int channel) => Handle(Manager.Connection, 0u, data, size);
+    public void OnMessage(Connection con, uint sender, Ptr data, int size) => Handle(con, sender, data, size);
 
     #endregion
 }

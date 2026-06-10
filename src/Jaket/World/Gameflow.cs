@@ -1,6 +1,5 @@
 namespace Jaket.World;
 
-using Steamworks;
 using System.Collections;
 using UnityEngine;
 
@@ -120,7 +119,7 @@ public class Gameflow
         {
             int data = 0;
             Teams.All.Each(t => data |= Random.Range(0, 24) << (byte)t * 5);
-            LobbyController.Lobby?.SendChatString("#/s" + data);
+            ChatChannel.Send("#/s" + data);
         }
 
         UI.Spectator.Rebuild();
@@ -140,16 +139,16 @@ public class Gameflow
     }
 
     /// <summary> Handles gamemode specific actions on player death. </summary>
-    public static void OnDeath(Friend member)
+    public static void OnDeath(uint member)
     {
         if (Mode.HPs() || Mode.NoRestarts())
         {
             static void Dec(byte id) { if (health[id] > 0 && health[id] != byte.MaxValue) health[id]--; }
 
-            if (member.IsMe)
-                Dec((byte)(Networking.LocalPlayer                           ).Team);
+            if (member == AccId)
+                Dec((byte)(Networking.LocalPlayer                     ).Team);
             else
-                Dec((byte)(Networking.Entities[member.AccId] as RemotePlayer).Team);
+                Dec((byte)(Networking.Entities[member] as RemotePlayer).Team);
         }
         if (Mode.HealOnKill())
         {
@@ -232,14 +231,14 @@ public class Gameflow
             return string.Join("[8] []", display);
         })));
 
-        if (LobbyController.IsOwner && champ != Team.None) LobbyController.Lobby?.SendChatString("#/v" + (byte)champ);
+        if (LobbyController.IsOwner && champ != Team.None) ChatChannel.Send("#/v" + (byte)champ);
     }
 
     private static void UpdateWTO()
     {
         Count(out _, out _, out var champ);
 
-        if (LobbyController.IsOwner && champ != Team.None) LobbyController.Lobby?.SendChatString("#/v" + (byte)champ);
+        if (LobbyController.IsOwner && champ != Team.None) ChatChannel.Send("#/v" + (byte)champ);
     }
 
     private static void UpdateRES()

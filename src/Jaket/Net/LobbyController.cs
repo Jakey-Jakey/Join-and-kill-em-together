@@ -1,16 +1,15 @@
 namespace Jaket.Net;
 
-using Steamworks;
-using Steamworks.Data;
 using UnityEngine;
 
 using Jaket.Assets;
+using Jaket.Net.Backends;
 
 /// <summary> Class responsible for managing the lobby. </summary>
 public static class LobbyController
 {
     /// <summary> Matchmaking lobby that the player is connected to. </summary>
-    public static Lobby? Lobby;
+    public static INetLobby Lobby;
     public static bool Online => Lobby != null;
     public static bool Offline => Lobby == null;
 
@@ -82,15 +81,13 @@ public static class LobbyController
         Log.Info("[LOBY] Creating a lobby...");
 
         Creating = true;
-        SteamMatchmaking.CreateLobbyAsync(8).ContinueWith(t =>
+        NetBackends.Current.CreateLobby(8, lobby =>
         {
             Creating = false;
-            Lobby = t.Result;
+            Lobby = lobby;
             Owner = AccId;
             IsOwner = true;
 
-            Lobby?.SetJoinable(true);
-            Lobby?.SetPrivate();
             LobbyConfig.Reset();
 
             Events.OnLobbyEnter.Fire();
@@ -115,20 +112,20 @@ public static class LobbyController
     }
 
     /// <summary> Opens an invitation dialog. </summary>
-    public static void InviteFriend() => SteamFriends.OpenGameInviteOverlay(Lobby.Value.Id);
+    public static void InviteFriend() => NetBackends.Current.OpenInviteOverlay();
 
-    /// <summary> Connects to the given lobby. </summary>
-    public static void JoinLobby(Lobby lobby)
+    /// <summary> Connects to the lobby with the given code. </summary>
+    public static void JoinLobby(string code)
     {
-        if (Lobby?.Id == lobby.Id) return;
+        if (Lobby?.Code == code) return;
         Log.Info("[LOBY] Joining a lobby...");
 
         // leave the previous lobby before joining the new one
         if (Online) LeaveLobby(false);
 
-        lobby.Join().ContinueWith(t =>
+        NetBackends.Current.JoinLobby(code, lobby =>
         {
-            if (t.Result == RoomEnter.Success)
+            if (lobby != null)
             {
                 Lobby = lobby;
                 Owner = lobby.Owner.AccId;
@@ -137,7 +134,7 @@ public static class LobbyController
                 Events.OnLobbyEnter.Fire();
                 Log.Info($"[LOBY] Successfully joined the lobby");
             }
-            else Log.Warning($"[LOBY] Couldn't join the lobby, the result is {t.Result}");
+            else Log.Warning($"[LOBY] Couldn't join the lobby");
         });
     }
 
@@ -147,30 +144,30 @@ public static class LobbyController
     /// <summary> Copies the lobby code to the clipboard. </summary>
     public static void CopyCode()
     {
-        GUIUtility.systemCopyBuffer = Lobby?.Id.ToString() ?? "How?";
+        GUIUtility.systemCopyBuffer = Lobby?.Code ?? "How?";
         Bundle.Hud("lobby.copied");
     }
 
     /// <summary> Joins by the lobby code from the clipboard. </summary>
     public static void JoinByCode()
     {
-        if (ulong.TryParse(GUIUtility.systemCopyBuffer, out var code)) JoinLobby(new(code));
+        if (NetBackends.Current.ValidCode(GUIUtility.systemCopyBuffer)) JoinLobby(GUIUtility.systemCopyBuffer);
         else Bundle.Hud("lobby.failed");
     }
 
     /// <summary> Fetches the list of public lobbies. </summary>
-    public static void FetchLobbies(Cons<Lobby[]> cons)
+    public static void FetchLobbies(Cons<LobbyInfo[]> cons)
     {
         if (Fetching) return;
         Log.Info("[LOBY] Fetching the list of public lobbies...");
 
         Fetching = true;
-        SteamMatchmaking.LobbyList.WithKeyValue("client", "jaket").RequestAsync().ContinueWith(t =>
+        NetBackends.Current.FetchLobbies(lobbies =>
         {
             Fetching = false;
-            cons(t.Result ?? []);
+            cons(lobbies ?? []);
 
-            Log.Info($"[LOBY] Fetched {t.Result?.Length ?? 0} lobbies");
+            Log.Info($"[LOBY] Fetched {lobbies?.Length ?? 0} lobbies");
         });
     }
 

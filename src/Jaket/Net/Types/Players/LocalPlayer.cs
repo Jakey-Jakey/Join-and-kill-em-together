@@ -34,7 +34,7 @@ public class LocalPlayer : Entity
     /// <summary> Whether the current level is 4-4. </summary>
     private bool pyramid;
 
-    public LocalPlayer() : base(AccId = Tools.Tools.Id.AccountId, EntityType.Player)
+    public LocalPlayer() : base(AccId = Backends.NetBackends.Current.SelfId, EntityType.Player)
     {
         Events.OnLoad += () =>
         {

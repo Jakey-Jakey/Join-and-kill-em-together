@@ -1,7 +1,8 @@
 namespace Jaket.Sprays;
 
-using Steamworks.Data;
 using UnityEngine;
+
+using Connection = Jaket.Net.Backends.INetConnection;
 
 using Jaket.Content;
 using Jaket.IO;

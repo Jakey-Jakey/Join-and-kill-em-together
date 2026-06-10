@@ -67,7 +67,7 @@ public class Emotes : MonoSingleton<Emotes>
     {
         yield return new WaitForSeconds(Length[Current] + .5f);
 
-        if (Current == 0x03) LobbyController.Lobby?.SendChatString("#/r" + Rps);
+        if (Current == 0x03) ChatChannel.Send("#/r" + Rps);
         Play(0xFF);
     }
 }

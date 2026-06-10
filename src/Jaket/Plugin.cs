@@ -71,6 +71,7 @@ public class Plugin : MonoBehaviour
         Pointers.Allocate();
         Stats.StartRecord();
 
+        Net.Backends.NetBackends.Load();
         Administration.Load();
         LobbyController.Load();
         Entities.Load();

@@ -1,12 +1,11 @@
 namespace Jaket;
 
-using Steamworks;
-using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 using Jaket.Net;
+using Jaket.Net.Backends;
 
 /// <summary> List of project events, an important part of the internal logic. </summary>
 public class Events : MonoBehaviour
@@ -30,12 +29,12 @@ public class Events : MonoBehaviour
     /// <summary> Triggered when the local player enters a lobby. </summary>
     public static SafeEvent OnLobbyEnter = new("lobby-enter");
 
-    /// <summary> Triggered when someone invites you to their lobby. </summary>
-    public static SafeEvent<Lobby> OnLobbyInvite = new("lobby-invite");
+    /// <summary> Triggered when someone invites you to their lobby; the argument is the lobby code. </summary>
+    public static SafeEvent<string> OnLobbyInvite = new("lobby-invite");
     /// <summary> Triggered when someone joins the lobby. </summary>
-    public static SafeEvent<Friend> OnMemberJoin = new("lobby-join");
+    public static SafeEvent<NetMember> OnMemberJoin = new("lobby-join");
     /// <summary> Triggered when someone leaves the lobby. </summary>
-    public static SafeEvent<Friend> OnMemberLeave = new("lobby-leave");
+    public static SafeEvent<NetMember> OnMemberLeave = new("lobby-leave");
 
     /// <summary> Triggered when a team composition changes. </summary>
     public static SafeEvent OnTeamChange = new("team-change");
@@ -59,13 +58,6 @@ public class Events : MonoBehaviour
             OnLoad.Fire();
             if (Scene == "Main Menu") OnMainMenuLoad.Fire();
         };
-
-        SteamMatchmaking.OnLobbyDataChanged += lobby => OnLobbyAction.Fire();
-
-        SteamFriends.OnGameLobbyJoinRequested += (lobby, id) => OnLobbyInvite.Fire(lobby);
-
-        SteamMatchmaking.OnLobbyMemberJoined += (lobby, member) => OnMemberJoin.Fire(member);
-        SteamMatchmaking.OnLobbyMemberLeave += (lobby, member) => OnMemberLeave.Fire(member);
 
         OnLobbyAction += OnTeamChange.Fire;
         OnLobbyAction += OnHandChange.Fire;

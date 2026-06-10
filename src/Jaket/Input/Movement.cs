@@ -221,7 +221,7 @@ public class Movement : MonoSingleton<Movement>
 
         if (__instance.hp > 0 && __instance.hp - damage <= 0)
         {
-            LobbyController.Lobby?.SendChatString("#/d");
+            ChatChannel.Send("#/d");
             Emotes.Instance.Play(0xFF);
         }
     }

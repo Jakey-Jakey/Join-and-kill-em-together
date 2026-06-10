@@ -1,6 +1,6 @@
 namespace Jaket.Net.Endpoints;
 
-using Steamworks.Data;
+using Connection = Jaket.Net.Backends.INetConnection;
 
 using Jaket.Content;
 using Jaket.IO;

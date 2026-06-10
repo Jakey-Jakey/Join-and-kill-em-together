@@ -7,34 +7,26 @@ global using Ins = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruc
 namespace Jaket.Tools;
 
 using HarmonyLib;
-using Steamworks;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
 using Jaket.Harmony;
 using Jaket.Net;
+using Jaket.Net.Backends;
 
 /// <summary> Set of different tools for simplifying life and systematization of code. </summary>
 public static class Tools
 {
-    #region steam
+    #region identity
 
-    /// <summary> Steam's identifier of the player. </summary>
-    public static SteamId Id => SteamClient.SteamId;
-    /// <summary> Account identifier of the player. </summary>
+    /// <summary> Account identifier of the player, assigned by the multiplayer backend. </summary>
     public static uint AccId;
 
     extension(uint id)
     {
         /// <summary> Name of the member. </summary>
-        public string Name => new Friend(id | 76561197960265728u).Name;
-    }
-
-    extension(Friend member)
-    {
-        /// <summary> Account identifier of the member. </summary>
-        public uint AccId => member.Id.AccountId;
+        public string Name => NetBackends.Current.NameOf(id);
     }
 
     #endregion

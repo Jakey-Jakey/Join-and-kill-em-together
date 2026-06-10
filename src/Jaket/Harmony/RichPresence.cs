@@ -31,13 +31,13 @@ public static class RichPresence
          */
         if (LobbyController.Offline)
         {
-            SteamFriends.SetRichPresence("steam_player_group", "");
-            SteamFriends.SetRichPresence("steam_player_group_size", "");
+            Net.Backends.NetBackends.Current.SetRichPresence("steam_player_group", "");
+            Net.Backends.NetBackends.Current.SetRichPresence("steam_player_group_size", "");
         }
         else
         {
-            SteamFriends.SetRichPresence("steam_player_group", LobbyConfig.Name);
-            SteamFriends.SetRichPresence("steam_player_group_size", LobbyController.Lobby?.MemberCount.ToString());
+            Net.Backends.NetBackends.Current.SetRichPresence("steam_player_group", LobbyConfig.Name);
+            Net.Backends.NetBackends.Current.SetRichPresence("steam_player_group_size", LobbyController.Lobby?.MemberCount.ToString());
         }
     }
 

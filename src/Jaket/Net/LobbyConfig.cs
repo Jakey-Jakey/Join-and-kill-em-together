@@ -1,7 +1,8 @@
 namespace Jaket.Net;
 
-using Steamworks;
 using System.Collections.Generic;
+
+using Jaket.Net.Backends;
 
 /// <summary> Class responsible for configuring the lobby. </summary>
 public static class LobbyConfig
@@ -16,7 +17,7 @@ public static class LobbyConfig
     public static string Name
     {
         get => Get("name");
-        set => Set("name", value ?? $"{SteamClient.Name}'s lobby");
+        set => Set("name", value ?? $"{NetBackends.Current.SelfName}'s lobby");
     }
     /// <summary> Mode of the lobby, gamemodes. </summary>
     public static string Mode

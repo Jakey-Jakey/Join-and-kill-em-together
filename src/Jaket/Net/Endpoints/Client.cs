@@ -41,6 +41,8 @@ public class Client : Endpoint, IConnectionManager
 
         Listen(PacketType.Hitscan, r => Entities.Hitscans.Make(r.EntityType(), r.Vector(), r.Vector(), r.Bool(), r.Byte()));
 
+        Listen(PacketType.Insignia, r => Entities.Insignias.Make(r));
+
         Listen(PacketType.Damage, r =>
         {
             if (ents.TryGetValue(r.Id(), out var e)) e.Damage(r);

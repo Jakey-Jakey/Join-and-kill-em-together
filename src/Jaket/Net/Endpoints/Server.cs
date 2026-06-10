@@ -51,6 +51,12 @@ public class Server : Endpoint, ISocketManager
             Administration.Find(sender).Handle(type);
         });
 
+        Listen(PacketType.Insignia, (con, sender, r, s) =>
+        {
+            Entities.Insignias.Make(r);
+            Redirect(r, s, con);
+        });
+
         Listen(PacketType.Damage, (con, sender, r, s) =>
         {
             if (ents.TryGetValue(r.Id(), out var e))

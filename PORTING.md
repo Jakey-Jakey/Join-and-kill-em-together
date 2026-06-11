@@ -85,9 +85,10 @@ Edits were kept mechanical; the `Connection` name is preserved in endpoint files
   rejected, since membership notifications can lag behind P2P requests.
 * **Social surface.** EOS has no overlay: profile buttons do nothing, "invite friend" copies the
   lobby code to the clipboard, rich presence is a no-op.
-* **Update check.** `Version.CURRENT` is `2.0.0-eos.1`, which never equals an upstream release tag,
-  so the in-game "outdated mod" notice will point at upstream releases. Treat it as a reminder to
-  rebase the fork.
+* **Versioning.** `Version.CURRENT` stays the upstream version (`2.0.0`) because BepInEx parses the
+  `BepInPlugin` version with `System.Version`, which rejects suffixes; the fork suffix lives in
+  `Version.SUFFIX` (`-eos.1`) and is shown via `Version.Readable`. The in-game update check compares
+  against upstream releases as before.
 
 ## Epic Games portal registration (one-time, human step)
 

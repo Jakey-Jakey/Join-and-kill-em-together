@@ -10,8 +10,10 @@ using Jaket.Assets;
 /// <summary> Class that handles interactions with the repository of the mod. This includes checking for updates and fetching compatible mods. </summary>
 public static class Version
 {
-    /// <summary> Current version of the project. </summary>
-    public const string CURRENT = "2.0.0-eos.1";
+    /// <summary> Current version of the project. Must parse as System.Version, so the fork suffix is kept separately. </summary>
+    public const string CURRENT = "2.0.0";
+    /// <summary> Suffix of the Steam-optional fork. </summary>
+    public const string SUFFIX = "-eos.1";
     /// <summary> Whether current build is debug. </summary>
     public const bool DEBUG = true;
 
@@ -22,8 +24,8 @@ public static class Version
     /// <summary> Various access points. </summary>
     public const string GITHUB_API = "https://api.github.com", GITHUB_RAW = "https://raw.githubusercontent.com";
 
-    /// <summary> Readable version includes beta tag. </summary>
-    public static string Readable => DEBUG ? $"{CURRENT}-beta" : CURRENT;
+    /// <summary> Readable version includes the fork suffix and beta tag. </summary>
+    public static string Readable => DEBUG ? $"{CURRENT}{SUFFIX}-beta" : CURRENT + SUFFIX;
     /// <summary> Hash of the current build's commit. </summary>
     public static string Hash => Assembly.GetCallingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion[^40..^32];
 
